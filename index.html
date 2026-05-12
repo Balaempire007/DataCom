@@ -1,0 +1,2038 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Datacom Inventory System</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: #eef3f8;
+      color: #172033;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      min-height: 100vh;
+    }
+
+    .app-header {
+      background: white;
+      border-bottom: 1px solid #dce4ee;
+      box-shadow: 0 8px 24px rgba(23, 32, 51, 0.08);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .header-inner {
+      align-items: center;
+      display: flex;
+      gap: 22px;
+      justify-content: space-between;
+      margin: 0 auto;
+      max-width: 1240px;
+      padding: 16px 24px;
+    }
+
+    .brand {
+      align-items: center;
+      display: flex;
+      gap: 14px;
+      min-width: 260px;
+    }
+
+    .logo {
+      background: white;
+      border: 1px solid #dce4ee;
+      border-radius: 8px;
+      height: 58px;
+      object-fit: contain;
+      padding: 7px;
+      width: 58px;
+    }
+
+    h1 {
+      color: #172033;
+      font-size: 24px;
+      line-height: 1.1;
+    }
+
+    .subtitle {
+      color: #5c667a;
+      font-size: 13px;
+      margin-top: 4px;
+    }
+
+    .login-screen {
+      align-items: center;
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    .login-card {
+      background: white;
+      border: 1px solid #dce4ee;
+      border-radius: 8px;
+      box-shadow: 0 18px 44px rgba(23, 32, 51, 0.14);
+      max-width: 430px;
+      padding: 28px;
+      width: 100%;
+    }
+
+    .login-brand {
+      align-items: center;
+      display: flex;
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+
+    .login-brand h1 {
+      font-size: 22px;
+    }
+
+    .login-help {
+      background: #f8fafc;
+      border: 1px solid #dce4ee;
+      border-radius: 8px;
+      color: #5c667a;
+      font-size: 13px;
+      line-height: 1.5;
+      margin-top: 18px;
+      padding: 12px 14px;
+    }
+
+    .user-area {
+      align-items: center;
+      display: none;
+      gap: 12px;
+      justify-content: flex-end;
+    }
+
+    .user-area.is-visible {
+      display: flex;
+    }
+
+    .user-chip {
+      background: #f4f7fb;
+      border: 1px solid #dce4ee;
+      border-radius: 8px;
+      color: #344054;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 10px 12px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .nav {
+      display: none;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .nav.is-visible {
+      display: flex;
+    }
+
+    .nav-button {
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      color: #344054;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 700;
+      min-height: 40px;
+      padding: 0 14px;
+    }
+
+    .nav-button:hover,
+    .nav-button.is-active {
+      background: #e7f1f8;
+      border-color: #bdd9ea;
+      color: #1d6f9f;
+    }
+
+    .app {
+      margin: 0 auto;
+      max-width: 1240px;
+      padding: 24px;
+    }
+
+    .page {
+      display: none;
+    }
+
+    .page.is-active {
+      display: block;
+    }
+
+    .page-title {
+      margin-bottom: 18px;
+    }
+
+    .page-title h2 {
+      color: #172033;
+      font-size: 28px;
+      margin-bottom: 6px;
+    }
+
+    .page-title p {
+      color: #5c667a;
+      font-size: 15px;
+    }
+
+    .panel {
+      background: white;
+      border: 1px solid #dce4ee;
+      border-radius: 8px;
+      box-shadow: 0 16px 38px rgba(23, 32, 51, 0.1);
+      overflow: hidden;
+    }
+
+    .panel + .panel {
+      margin-top: 22px;
+    }
+
+    .panel-header {
+      align-items: center;
+      background: #172033;
+      color: white;
+      display: flex;
+      gap: 18px;
+      justify-content: space-between;
+      padding: 20px 24px;
+    }
+
+    .panel-header h3 {
+      font-size: 20px;
+      margin-bottom: 5px;
+    }
+
+    .panel-header p {
+      color: #c8d2df;
+      font-size: 14px;
+    }
+
+    .panel-tools {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    .toggle-control {
+      align-items: center;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      color: white;
+      display: flex;
+      gap: 10px;
+      min-height: 40px;
+      padding: 0 12px;
+    }
+
+    .toggle-control input {
+      accent-color: #1d6f9f;
+      height: 16px;
+      min-height: 0;
+      padding: 0;
+      width: 16px;
+    }
+
+    .toggle-control span {
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .inventory-filter-bar {
+      background: #f8fafc;
+      border-bottom: 1px solid #dce4ee;
+      display: flex;
+      gap: 16px;
+      padding: 14px 16px;
+      flex-wrap: wrap;
+    }
+
+    .inventory-filter-field {
+      max-width: 320px;
+      width: 100%;
+    }
+
+    .panel-body {
+      padding: 24px;
+    }
+
+    .dashboard-grid,
+    .grid {
+      display: grid;
+      gap: 18px;
+    }
+
+    .dashboard-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .stat-card {
+      background: white;
+      border: 1px solid #dce4ee;
+      border-radius: 8px;
+      box-shadow: 0 12px 30px rgba(23, 32, 51, 0.08);
+      padding: 20px;
+    }
+
+    .stat-card span {
+      color: #667085;
+      display: block;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+    }
+
+    .stat-card strong {
+      color: #172033;
+      display: block;
+      font-size: 32px;
+      line-height: 1;
+    }
+
+    .field {
+      min-width: 0;
+    }
+
+    .field.full {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      color: #344054;
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 7px;
+    }
+
+    input,
+    select,
+    textarea {
+      background: #f8fafc;
+      border: 1px solid #cfd8e3;
+      border-radius: 8px;
+      color: #172033;
+      font-size: 15px;
+      min-height: 46px;
+      padding: 11px 12px;
+      width: 100%;
+    }
+
+    textarea {
+      min-height: 94px;
+      resize: vertical;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      background: white;
+      border-color: #1d6f9f;
+      box-shadow: 0 0 0 3px rgba(29, 111, 159, 0.14);
+      outline: none;
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+      margin-top: 22px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 700;
+      min-height: 44px;
+      padding: 0 18px;
+    }
+
+    .primary {
+      background: #1d6f9f;
+      color: white;
+    }
+
+    .secondary {
+      background: #e7edf4;
+      color: #172033;
+    }
+
+    .ghost {
+      background: white;
+      border: 1px solid #cfd8e3;
+      color: #344054;
+    }
+
+    .row-action {
+      background: #e7f1f8;
+      border: 1px solid #bdd9ea;
+      color: #1d6f9f;
+      min-height: 34px;
+      padding: 0 12px;
+    }
+
+    .row-action.danger {
+      background: #fff1f1;
+      border-color: #ffc9c9;
+      color: #b42318;
+    }
+
+    .action-cell {
+      text-align: right;
+      white-space: nowrap;
+      width: 180px;
+    }
+
+    .status-badge {
+      border-radius: 999px;
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 800;
+      padding: 5px 9px;
+    }
+
+    .status-badge.active {
+      background: #edfdf4;
+      color: #087443;
+    }
+
+    .status-badge.inactive {
+      background: #f2f4f7;
+      color: #5c667a;
+    }
+
+    .message {
+      border-radius: 8px;
+      display: none;
+      font-size: 14px;
+      font-weight: 700;
+      margin-top: 16px;
+      padding: 12px 14px;
+    }
+
+    .message.is-visible {
+      display: block;
+    }
+
+    .message.error {
+      background: #fff1f1;
+      border: 1px solid #ffc9c9;
+      color: #b42318;
+    }
+
+    .message.success {
+      background: #edfdf4;
+      border: 1px solid #b7ebc6;
+      color: #087443;
+    }
+
+    .lookup-panel {
+      background: #f8fafc;
+      border: 1px solid #dce4ee;
+      border-radius: 8px;
+      display: grid;
+      gap: 1px;
+      grid-template-columns: repeat(5, 1fr);
+      margin-top: 18px;
+      overflow: hidden;
+    }
+
+    .lookup-item {
+      background: white;
+      min-height: 76px;
+      padding: 13px 14px;
+    }
+
+    .lookup-item span {
+      color: #667085;
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      margin-bottom: 7px;
+      text-transform: uppercase;
+    }
+
+    .lookup-item strong {
+      color: #172033;
+      display: block;
+      font-size: 15px;
+      overflow-wrap: anywhere;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      border-collapse: collapse;
+      min-width: 920px;
+      width: 100%;
+    }
+
+    th,
+    td {
+      border-bottom: 1px solid #dce4ee;
+      font-size: 14px;
+      padding: 12px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: #f4f7fb;
+      color: #344054;
+      font-size: 12px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    td {
+      color: #172033;
+    }
+
+    .empty-row {
+      color: #667085;
+      padding: 24px;
+      text-align: center;
+    }
+
+    .qty {
+      font-variant-numeric: tabular-nums;
+      text-align: right;
+    }
+
+    @media (max-width: 980px) {
+      .header-inner {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .nav {
+        justify-content: flex-start;
+      }
+
+      .dashboard-grid,
+      .grid,
+      .lookup-panel {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 640px) {
+      .app {
+        padding: 16px;
+      }
+
+      .brand,
+      .panel-header {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .panel-tools {
+        width: 100%;
+      }
+
+      .dashboard-grid,
+      .grid,
+      .lookup-panel {
+        grid-template-columns: 1fr;
+      }
+
+      .actions {
+        flex-direction: column-reverse;
+      }
+
+      button {
+        width: 100%;
+      }
+
+      .inventory-filter-field {
+        max-width: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <section class="login-screen" id="loginScreen">
+    <div class="login-card">
+      <div class="login-brand">
+        <img src="icon.jpeg" alt="Datacom Logo" class="logo">
+        <div>
+          <h1>Datacom Inventory System</h1>
+          <p class="subtitle">Internal Inventory Transaction System</p>
+        </div>
+      </div>
+
+      <form id="loginForm">
+        <div class="field">
+          <label for="username">Username</label>
+          <input id="username" type="text" placeholder="Example: Funz" required>
+        </div>
+        <div class="field" style="margin-top: 16px;">
+          <label for="password">Password</label>
+          <input id="password" type="password" placeholder="Enter password" required>
+        </div>
+        <button class="primary" type="submit" style="margin-top: 20px; width: 100%;">Login</button>
+      </form>
+
+      <div class="message error" id="loginMessage">Invalid username or password.</div>
+      <div class="login-help">
+        Sample users: Funz / admin, June / warehouse, Devi / warehouse, Sales / sales.
+      </div>
+    </div>
+  </section>
+
+  <header class="app-header hidden" id="appHeader">
+    <div class="header-inner">
+      <div class="brand">
+        <img src="icon.jpeg" alt="Datacom Logo" class="logo">
+        <div>
+          <h1>Datacom Inventory System</h1>
+          <p class="subtitle">Internal Inventory Transaction System</p>
+        </div>
+      </div>
+
+      <nav class="nav" aria-label="Main navigation">
+        <button class="nav-button is-active" type="button" data-page="dashboard">Dashboard</button>
+        <button class="nav-button" type="button" data-page="product-master">Product Master</button>
+        <button class="nav-button" type="button" data-page="stock-entry">Stock Entry</button>
+        <button class="nav-button" type="button" data-page="inventory-view">Inventory View</button>
+      </nav>
+
+      <div class="user-area" id="userArea">
+        <span class="user-chip" id="userChip">User</span>
+        <button class="secondary" type="button" id="logoutButton">Logout</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="app hidden" id="appMain">
+    <section class="page is-active" id="dashboard">
+      <div class="page-title">
+        <h2>Dashboard</h2>
+        <p>Quick overview for product records, stock movements, and sales-facing inventory.</p>
+      </div>
+
+      <div class="dashboard-grid">
+        <div class="stat-card">
+          <span>Product Masters</span>
+          <strong id="statProducts">0</strong>
+        </div>
+        <div class="stat-card">
+          <span>Stock Movements</span>
+          <strong id="statMovements">0</strong>
+        </div>
+        <div class="stat-card">
+          <span>Total Quantity</span>
+          <strong id="statQuantity">0</strong>
+        </div>
+        <div class="stat-card">
+          <span>Low / Zero Stock</span>
+          <strong id="statZeroStock">0</strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="page" id="product-master">
+      <div class="page-title">
+        <h2>Product Master</h2>
+        <p>Create and manage product records. Warehouse stock entry uses these records for lookup.</p>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h3>Product Master Record</h3>
+            <p>Only fixed product information is controlled here.</p>
+          </div>
+        </div>
+        <div class="panel-body">
+          <form id="productMasterForm">
+            <div class="grid">
+              <div class="field">
+                <label for="masterPartNumber">Part Number</label>
+                <input id="masterPartNumber" type="text" placeholder="Example: DTC-CAT6-001" required>
+              </div>
+              <div class="field">
+                <label for="masterDescription">Product Description</label>
+                <input id="masterDescription" type="text" placeholder="Example: Cat6 UTP network cable" required>
+              </div>
+              <div class="field">
+                <label for="masterCategory">Category</label>
+                <select id="masterCategory" required>
+                  <option value="">Select category</option>
+                  <option value="Keyboard">Keyboard</option>
+                  <option value="Mouse">Mouse</option>
+                  <option value="USB Hub and Card Reader">USB Hub and Card Reader</option>
+                  <option value="Enclosure">Enclosure</option>
+                  <option value="Others Qrush Products">Others Qrush Products</option>
+                  <option value="Power Cables">Power Cables</option>
+                  <option value="Network Cables">Network Cables</option>
+                  <option value="Cable Accessories">Cable Accessories</option>
+                  <option value="Server Rack">Server Rack</option>
+                  <option value="Server Rack PDU">Server Rack PDU</option>
+                  <option value="Server Rack Tray">Server Rack Tray</option>
+                  <option value="Server Rack Accessories">Server Rack Accessories</option>
+                  <option value="LCD Equipment">LCD Equipment</option>
+                  <option value="Tablet Equipment">Tablet Equipment</option>
+                  <option value="Electric Table">Electric Table</option>
+                  <option value="Charging Cart">Charging Cart</option>
+                  <option value="Mobile Equipment">Mobile Equipment</option>
+                  <option value="Dcom Casing">Dcom Casing</option>
+                  <option value="Server Rack Fan Tray">Server Rack Fan Tray</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="masterStatus">Status</label>
+                <select id="masterStatus" required>
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
+                </select>
+              </div>
+            </div>
+            <div class="actions">
+              <button class="ghost hidden" id="cancelProductEditButton" type="button">Cancel Edit</button>
+              <button class="secondary" type="reset" id="clearProductButton">Clear Product</button>
+              <button class="primary" type="submit" id="saveProductButton">Save Product Master</button>
+            </div>
+          </form>
+
+          <div class="message success" id="masterMessage"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h3>Product Master List</h3>
+            <p>Managed product records available for stock entry lookup.</p>
+          </div>
+          <div class="panel-tools">
+            <input class="hidden" id="productCsvInput" type="file" accept=".csv,text/csv">
+            <button class="secondary" id="importProductCsvButton" type="button">Import CSV</button>
+            <button class="ghost" id="exportProductCsvButton" type="button">Export CSV</button>
+          </div>
+        </div>
+        <div class="inventory-filter-bar">
+          <div class="field inventory-filter-field">
+            <label for="productMasterSearch">Search Product Master</label>
+            <input id="productMasterSearch" type="search" placeholder="Part number, description, or category">
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Part Number</th>
+                <th>Product Description</th>
+                <th>Category</th>
+                <th>Status</th>
+                <th class="action-cell">Action</th>
+              </tr>
+            </thead>
+            <tbody id="productMasterRows">
+              <tr>
+                <td class="empty-row" colspan="5">No product master records yet.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="page" id="stock-entry">
+      <div class="page-title">
+        <h2>Stock Entry</h2>
+        <p>Warehouse stock in/out transactions. Product details are locked to Product Master lookup.</p>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h3>Warehouse Transaction</h3>
+            <p>Enter a part number to auto-fill product details from Product Master.</p>
+          </div>
+        </div>
+        <div class="panel-body">
+          <form id="stockEntryForm">
+            <div class="grid">
+              <div class="field">
+                <label for="operationType">Operation Type</label>
+                <select id="operationType" required>
+                  <option value="">Select operation type</option>
+                  <option value="Add Stock">Add Stock</option>
+                  <option value="Remove Stock">Remove Stock</option>
+                  <option value="Adjustment">Adjustment</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="stockCardNo">Stock Card No.</label>
+                <input id="stockCardNo" type="text" placeholder="Example: SC-2026-001" required>
+              </div>
+              <div class="field">
+                <label for="entryPartNumber">Part Number</label>
+                <input id="entryPartNumber" type="text" placeholder="Enter existing part number" required>
+              </div>
+              <div class="field">
+                <label for="quantity">Quantity</label>
+                <input id="quantity" type="number" min="0" placeholder="Example: 10" required>
+              </div>
+              <div class="field">
+                <label for="location">Location</label>
+                <input id="location" type="text" placeholder="Example: Main Store" required>
+              </div>
+              <div class="field">
+                <label for="stockStatusType">Stock Status Type</label>
+                <select id="stockStatusType" required>
+                  <option value="">Select stock status type</option>
+                  <option value="Available">Available</option>
+                  <option value="Reserved">Reserved</option>
+                  <option value="Modify">Modify</option>
+                  <option value="Sold">Sold</option>
+                  <option value="Showroom Unit">Showroom Unit</option>
+                  <option value="Warranty Replacement">Warranty Replacement</option>
+                  <option value="Returned Stock">Returned Stock</option>
+                  <option value="Damaged Stock">Damaged Stock</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="shipment">Shipment</label>
+                <input id="shipment" type="text" placeholder="Example: SHP-2026-001">
+              </div>
+              <div class="field">
+                <label for="pocKeyIn">POC Key In</label>
+                <select id="pocKeyIn" required>
+                  <option value="">Select POC</option>
+                  <option value="June">June</option>
+                  <option value="Devi">Devi</option>
+                </select>
+              </div>
+              <div class="field hidden" id="adjustmentReasonField">
+                <label for="adjustmentReason">Adjustment Reason</label>
+                <select id="adjustmentReason">
+                  <option value="">Select adjustment reason</option>
+                  <option value="Stock Take Correction">Stock Take Correction</option>
+                  <option value="Missing Stock">Missing Stock</option>
+                  <option value="Damaged Stock">Damaged Stock</option>
+                  <option value="Wrong Entry Correction">Wrong Entry Correction</option>
+                  <option value="Location Correction">Location Correction</option>
+                  <option value="Quantity Correction">Quantity Correction</option>
+                  <option value="Others">Others</option>
+                </select>
+              </div>
+              <div class="field full">
+                <label for="entryRemark">Remark</label>
+                <textarea id="entryRemark" placeholder="Transaction remarks for warehouse or sales view"></textarea>
+              </div>
+            </div>
+
+            <div class="lookup-panel">
+              <div class="lookup-item">
+                <span>Product Description</span>
+                <strong id="lookupDescription">Enter part number</strong>
+              </div>
+              <div class="lookup-item">
+                <span>Category</span>
+                <strong id="lookupCategory">-</strong>
+              </div>
+            </div>
+
+            <div class="message error" id="lookupMessage">Part number not found. Please create product master first.</div>
+            <div class="message success" id="stockMessage"></div>
+
+            <div class="actions">
+              <button class="secondary" type="reset">Clear Entry</button>
+              <button class="primary" type="submit">Submit Stock Entry</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h3>Stock Entry History</h3>
+            <p>Submitted stock movement records.</p>
+          </div>
+          <div class="panel-tools">
+            <input class="hidden" id="stockHistoryCsvInput" type="file" accept=".csv,text/csv">
+            <button class="secondary" id="importStockHistoryCsvButton" type="button">Import CSV</button>
+            <button class="ghost" id="exportStockHistoryCsvButton" type="button">Export CSV</button>
+          </div>
+        </div>
+        <div class="inventory-filter-bar">
+          <div class="field inventory-filter-field">
+            <label for="stockHistorySearch">Search Stock Entry History</label>
+            <input id="stockHistorySearch" type="search" placeholder="Stock card, part number, location, status, or remark">
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Date / Created At</th>
+                <th>Operation Type</th>
+                <th>Stock Card No.</th>
+                <th>Part Number</th>
+                <th class="qty">Quantity</th>
+                <th>Location</th>
+                <th>Category</th>
+                <th>Stock Status Type</th>
+                <th>Shipment</th>
+                <th>POC Key In</th>
+                <th>Remark</th>
+              </tr>
+            </thead>
+            <tbody id="stockHistoryRows">
+              <tr>
+                <td class="empty-row" colspan="11">No stock entry history yet.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="page" id="inventory-view">
+      <div class="page-title">
+        <h2>Inventory View</h2>
+        <p>Sales view only. Current quantity is calculated from stock movements.</p>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h3>Inventory List / Sales View</h3>
+            <p>Displays product information and available quantity without warehouse entry controls.</p>
+          </div>
+          <label class="toggle-control hidden" id="showZeroQuantityControl">
+            <input id="showZeroQuantityToggle" type="checkbox">
+            <span>Show Zero Quantity</span>
+          </label>
+        </div>
+        <div class="inventory-filter-bar">
+          <div class="field inventory-filter-field">
+            <label for="inventoryCategoryFilter">Filter by Category</label>
+            <select id="inventoryCategoryFilter"></select>
+          </div>
+          <div class="field inventory-filter-field">
+            <label for="stockCardSearch">Search</label>
+            <input id="stockCardSearch" type="search" placeholder="Search stock card, part number, description, status, POC, remark...">
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Part Number</th>
+                <th>Stock Card No.</th>
+                <th>Product Description</th>
+                <th>Category</th>
+                <th class="qty">Current Quantity</th>
+                <th>Stock Status Type</th>
+                <th>POC Key In</th>
+                <th>Remark</th>
+              </tr>
+            </thead>
+            <tbody id="inventoryRows">
+              <tr>
+                <td class="empty-row" colspan="8">No inventory records yet.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const users = [
+      {
+        username: "Funz",
+        role: "admin",
+        password: "admin123",
+        allowedPages: ["dashboard", "product-master", "stock-entry", "inventory-view"]
+      },
+      {
+        username: "June",
+        role: "warehouse",
+        password: "june123",
+        allowedPages: ["stock-entry", "inventory-view"]
+      },
+      {
+        username: "Devi",
+        role: "warehouse",
+        password: "devi123",
+        allowedPages: ["stock-entry", "inventory-view"]
+      },
+      {
+        username: "Sales",
+        role: "sales",
+        password: "sales123",
+        allowedPages: ["inventory-view"]
+      }
+    ];
+
+   const API_URL = `${window.location.origin}/api`;
+let productMasters = [];
+const movements = [];
+    let selectedInventoryCategory = "all";
+    let editingProductId = null;
+    let editingProductOriginalPartNumber = "";
+    let currentUser = null;
+    const loginForm = document.getElementById("loginForm");
+    const loginMessage = document.getElementById("loginMessage");
+    const loginScreen = document.getElementById("loginScreen");
+    const appHeader = document.getElementById("appHeader");
+    const appMain = document.getElementById("appMain");
+    const userArea = document.getElementById("userArea");
+    const userChip = document.getElementById("userChip");
+    const productMasterForm = document.getElementById("productMasterForm");
+    const stockEntryForm = document.getElementById("stockEntryForm");
+    const masterMessage = document.getElementById("masterMessage");
+    const lookupMessage = document.getElementById("lookupMessage");
+    const stockMessage = document.getElementById("stockMessage");
+    const cancelProductEditButton = document.getElementById("cancelProductEditButton");
+    const clearProductButton = document.getElementById("clearProductButton");
+    const saveProductButton = document.getElementById("saveProductButton");
+    const productCsvInput = document.getElementById("productCsvInput");
+    const importProductCsvButton = document.getElementById("importProductCsvButton");
+    const exportProductCsvButton = document.getElementById("exportProductCsvButton");
+    const productMasterSearch = document.getElementById("productMasterSearch");
+    const showZeroQuantityControl = document.getElementById("showZeroQuantityControl");
+    const showZeroQuantityToggle = document.getElementById("showZeroQuantityToggle");
+    const inventoryCategoryFilter = document.getElementById("inventoryCategoryFilter");
+    const stockCardSearch = document.getElementById("stockCardSearch");
+    const stockHistorySearch = document.getElementById("stockHistorySearch");
+    const stockHistoryCsvInput = document.getElementById("stockHistoryCsvInput");
+    const importStockHistoryCsvButton = document.getElementById("importStockHistoryCsvButton");
+    const exportStockHistoryCsvButton = document.getElementById("exportStockHistoryCsvButton");
+
+    function normalizePartNumber(value) {
+      return value.trim().toUpperCase();
+    }
+
+    function normalizeStockCardNo(value) {
+      return String(value || "").trim().toUpperCase();
+    }
+
+    function normalizeProductStatus(value) {
+      return value === "Inactive" ? "Inactive" : "Active";
+    }
+
+    function isInactiveProduct(product) {
+      return normalizeProductStatus(product.status) === "Inactive";
+    }
+
+    function findProduct(partNumber) {
+      const normalized = normalizePartNumber(partNumber);
+      return productMasters.find((product) => product.partNumber === normalized);
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function showMessage(element, text) {
+      element.textContent = text;
+      element.classList.add("is-visible");
+    }
+
+    function showStatusMessage(element, text, type = "success") {
+      element.textContent = text;
+      element.classList.remove("success", "error");
+      element.classList.add(type, "is-visible");
+    }
+
+    function hideMessage(element) {
+      element.classList.remove("is-visible");
+    }
+
+    function parseCsv(text) {
+      const rows = [];
+      let row = [];
+      let value = "";
+      let insideQuotes = false;
+
+      for (let index = 0; index < text.length; index += 1) {
+        const character = text[index];
+        const nextCharacter = text[index + 1];
+
+        if (character === '"' && insideQuotes && nextCharacter === '"') {
+          value += '"';
+          index += 1;
+          continue;
+        }
+
+        if (character === '"') {
+          insideQuotes = !insideQuotes;
+          continue;
+        }
+
+        if (character === "," && !insideQuotes) {
+          row.push(value);
+          value = "";
+          continue;
+        }
+
+        if ((character === "\n" || character === "\r") && !insideQuotes) {
+          if (character === "\r" && nextCharacter === "\n") {
+            index += 1;
+          }
+
+          row.push(value);
+          rows.push(row);
+          row = [];
+          value = "";
+          continue;
+        }
+
+        value += character;
+      }
+
+      row.push(value);
+      rows.push(row);
+
+      return rows;
+    }
+
+    function normalizeHeader(value) {
+      return value.replace(/^\uFEFF/, "").trim().toLowerCase();
+    }
+
+    function csvEscape(value) {
+      const text = String(value ?? "");
+      if (/[",\r\n]/.test(text)) {
+        return `"${text.replaceAll('"', '""')}"`;
+      }
+
+      return text;
+    }
+
+    function downloadCsv(filename, rows) {
+      const csvContent = rows
+        .map((row) => row.map(csvEscape).join(","))
+        .join("\r\n");
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function formatDateTime(value) {
+      if (!value) {
+        return "-";
+      }
+
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) {
+        return value;
+      }
+
+      return date.toLocaleString();
+    }
+
+    function getProductByPartNumber(partNumber) {
+      return productMasters.find((product) => product.partNumber === partNumber);
+    }
+
+    function getProductMasterCategories() {
+      return [...document.getElementById("masterCategory").options]
+        .map((option) => option.value)
+        .filter(Boolean);
+    }
+
+    function renderInventoryCategoryFilter() {
+      const categories = getProductMasterCategories();
+
+      if (selectedInventoryCategory !== "all" && !categories.includes(selectedInventoryCategory)) {
+        selectedInventoryCategory = "all";
+      }
+
+      const options = [
+        { label: "All", value: "all" },
+        ...categories.map((category) => ({ label: category, value: category }))
+      ];
+
+      inventoryCategoryFilter.innerHTML = options.map((option) => `
+        <option value="${escapeHtml(option.value)}">${escapeHtml(option.label)}</option>
+      `).join("");
+      inventoryCategoryFilter.value = selectedInventoryCategory;
+    }
+
+    async function upsertProductMaster(product) {
+      const response = await fetch(`${API_URL}/products`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(product)
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to import product.");
+      }
+
+      return data.product;
+    }
+
+    async function deleteProductMaster(productId) {
+      try {
+        const response = await fetch(`${API_URL}/products/${productId}`, {
+          method: "DELETE"
+        });
+        const data = await response.json();
+
+        if (!response.ok) {
+          showStatusMessage(masterMessage, data.error || "Failed to delete product.", "error");
+          return;
+        }
+
+        await loadProductsFromDatabase();
+        clearProductEditMode();
+        showStatusMessage(masterMessage, "Product deleted.");
+      } catch (error) {
+        showStatusMessage(masterMessage, "Cannot connect to backend API.", "error");
+      }
+    }
+
+    function switchPage(pageId) {
+      if (!currentUser || !currentUser.allowedPages.includes(pageId)) {
+        return;
+      }
+
+      document.querySelectorAll(".page").forEach((page) => {
+        page.classList.toggle("is-active", page.id === pageId);
+      });
+
+      document.querySelectorAll(".nav-button").forEach((button) => {
+        button.classList.toggle("is-active", button.dataset.page === pageId);
+      });
+    }
+
+    function applyRolePermissions() {
+      document.querySelectorAll(".nav-button").forEach((button) => {
+        const isAllowed = currentUser.allowedPages.includes(button.dataset.page);
+        button.classList.toggle("hidden", !isAllowed);
+      });
+
+      const isAdmin = currentUser.role === "admin";
+      showZeroQuantityControl.classList.toggle("hidden", !isAdmin);
+
+      if (!isAdmin) {
+        showZeroQuantityToggle.checked = false;
+      }
+
+      document.querySelector(".nav").classList.add("is-visible");
+      userArea.classList.add("is-visible");
+      userChip.textContent = `${currentUser.username} / ${currentUser.role}`;
+      switchPage(currentUser.allowedPages[0]);
+      renderInventory();
+    }
+
+    function login(user) {
+      currentUser = user;
+      loginScreen.classList.add("hidden");
+      appHeader.classList.remove("hidden");
+      appMain.classList.remove("hidden");
+      hideMessage(loginMessage);
+      applyRolePermissions();
+    }
+
+    function logout() {
+      currentUser = null;
+      loginForm.reset();
+      document.querySelector(".nav").classList.remove("is-visible");
+      userArea.classList.remove("is-visible");
+      appHeader.classList.add("hidden");
+      appMain.classList.add("hidden");
+      loginScreen.classList.remove("hidden");
+      document.querySelectorAll(".page").forEach((page) => page.classList.remove("is-active"));
+      document.getElementById("dashboard").classList.add("is-active");
+      document.querySelectorAll(".nav-button").forEach((button) => {
+        button.classList.remove("hidden", "is-active");
+      });
+      document.querySelector('[data-page="dashboard"]').classList.add("is-active");
+    }
+
+    function calculateCurrentQuantity(partNumber) {
+      return movements
+        .filter((movement) => movement.partNumber === partNumber)
+        .reduce((currentQuantity, movement) => {
+          if (movement.operationType === "Add Stock") {
+            return currentQuantity + movement.quantity;
+          }
+
+          if (movement.operationType === "Remove Stock") {
+            return currentQuantity - movement.quantity;
+          }
+
+          return movement.quantity;
+        }, 0);
+    }
+
+    function hasStockMovement(partNumber) {
+      return movements.some((movement) => movement.partNumber === partNumber);
+    }
+
+    function shouldShowInventoryProduct(product, quantity) {
+      if (!hasStockMovement(product.partNumber)) {
+        return false;
+      }
+
+      if (quantity > 0) {
+        return true;
+      }
+
+      return currentUser?.role === "admin" && showZeroQuantityToggle.checked && quantity === 0;
+    }
+
+    function updateDashboard() {
+      const totalQuantity = productMasters.reduce((total, product) => {
+        return total + calculateCurrentQuantity(product.partNumber);
+      }, 0);
+
+      const zeroStockCount = productMasters.filter((product) => {
+        return calculateCurrentQuantity(product.partNumber) <= 0;
+      }).length;
+
+      document.getElementById("statProducts").textContent = productMasters.length;
+      document.getElementById("statMovements").textContent = movements.length;
+      document.getElementById("statQuantity").textContent = totalQuantity;
+      document.getElementById("statZeroStock").textContent = zeroStockCount;
+    }
+
+    function renderProductMaster() {
+      const searchTerm = productMasterSearch.value.trim().toLowerCase();
+      const filteredProducts = searchTerm
+        ? productMasters.filter((product) => {
+            return [
+              product.partNumber,
+              product.description,
+              product.category
+            ].some((value) => String(value || "").toLowerCase().includes(searchTerm));
+          })
+        : productMasters;
+
+      const rows = filteredProducts.map((product) => `
+        <tr>
+          <td>${escapeHtml(product.partNumber)}</td>
+          <td>${escapeHtml(product.description)}</td>
+          <td>${escapeHtml(product.category)}</td>
+          <td>
+            <span class="status-badge ${isInactiveProduct(product) ? "inactive" : "active"}">
+              ${escapeHtml(normalizeProductStatus(product.status))}
+            </span>
+          </td>
+          <td class="action-cell">
+            <button class="row-action" type="button" data-edit-product-id="${product.id}">Edit</button>
+            <button class="row-action danger" type="button" data-delete-product-id="${product.id}">Delete</button>
+          </td>
+        </tr>
+      `);
+
+      document.getElementById("productMasterRows").innerHTML = rows.length
+        ? rows.join("")
+        : `<tr><td class="empty-row" colspan="5">${productMasters.length ? "No matching product master records." : "No product master records yet."}</td></tr>`;
+    }
+
+    function setProductEditMode(product) {
+      editingProductId = product.id;
+      editingProductOriginalPartNumber = product.partNumber;
+
+      document.getElementById("masterPartNumber").value = product.partNumber;
+      document.getElementById("masterDescription").value = product.description;
+      document.getElementById("masterCategory").value = product.category === "-" ? "" : product.category;
+      document.getElementById("masterStatus").value = normalizeProductStatus(product.status);
+
+      saveProductButton.textContent = "Update Product Master";
+      clearProductButton.classList.add("hidden");
+      cancelProductEditButton.classList.remove("hidden");
+      hideMessage(masterMessage);
+      document.getElementById("masterPartNumber").focus();
+    }
+
+    function clearProductEditMode() {
+      editingProductId = null;
+      editingProductOriginalPartNumber = "";
+      productMasterForm.reset();
+      saveProductButton.textContent = "Save Product Master";
+      clearProductButton.classList.remove("hidden");
+      cancelProductEditButton.classList.add("hidden");
+    }
+
+    function renderStockEntryHistory() {
+      const searchTerm = stockHistorySearch.value.trim().toLowerCase();
+      const filteredMovements = searchTerm
+        ? movements.filter((movement) => {
+            const product = getProductByPartNumber(movement.partNumber);
+            return [
+              movement.stockCardNo,
+              movement.partNumber,
+              product?.description,
+              movement.location,
+              movement.stockStatusType,
+              movement.shipment,
+              movement.pocKeyIn,
+              movement.remark
+            ].some((value) => String(value || "").toLowerCase().includes(searchTerm));
+          })
+        : movements;
+
+      const rows = filteredMovements.map((movement) => {
+        const product = getProductByPartNumber(movement.partNumber);
+
+        return `
+          <tr>
+            <td>${escapeHtml(formatDateTime(movement.createdAt))}</td>
+            <td>${escapeHtml(movement.operationType)}</td>
+            <td>${escapeHtml(movement.stockCardNo || "-")}</td>
+            <td>${escapeHtml(movement.partNumber)}</td>
+            <td class="qty">${movement.quantity}</td>
+            <td>${escapeHtml(movement.location)}</td>
+            <td>${escapeHtml(product?.category || "-")}</td>
+            <td>${escapeHtml(movement.stockStatusType)}</td>
+            <td>${escapeHtml(movement.shipment || "-")}</td>
+            <td>${escapeHtml(movement.pocKeyIn || "-")}</td>
+            <td>${escapeHtml(movement.remark || "-")}</td>
+          </tr>
+        `;
+      });
+
+      document.getElementById("stockHistoryRows").innerHTML = rows.length
+        ? rows.join("")
+        : `<tr><td class="empty-row" colspan="11">${movements.length ? "No matching stock entry history." : "No stock entry history yet."}</td></tr>`;
+    }
+
+    function renderInventory() {
+      renderInventoryCategoryFilter();
+      loadInventoryView();
+    }
+
+    function loadInventoryView() {
+      const searchValue = stockCardSearch.value.trim().toLowerCase();
+
+      const rows = productMasters.flatMap((product) => {
+        const productMovements = movements.filter((movement) => movement.partNumber === product.partNumber);
+        const latestMovement = productMovements[productMovements.length - 1];
+        const matchedStockCardMovement = searchValue
+          ? productMovements.find((movement) => String(movement.stockCardNo || "").toLowerCase().includes(searchValue))
+          : null;
+        const quantity = calculateCurrentQuantity(product.partNumber);
+        if (!shouldShowInventoryProduct(product, quantity)) {
+          return [];
+        }
+
+        if (selectedInventoryCategory !== "all" && product.category !== selectedInventoryCategory) {
+          return [];
+        }
+
+        const stockStatusType = latestMovement?.stockStatusType || "-";
+        const stockCardNo = matchedStockCardMovement?.stockCardNo || latestMovement?.stockCardNo || "-";
+        const pocKeyIn = latestMovement?.pocKeyIn || "-";
+        const remark = latestMovement?.remark || "No remark";
+
+        if (searchValue) {
+          const searchableValues = [
+            matchedStockCardMovement?.stockCardNo,
+            latestMovement?.stockCardNo,
+            product.partNumber,
+            product.description,
+            product.category,
+            quantity,
+            stockStatusType,
+            pocKeyIn,
+            remark
+          ];
+
+          const hasSearchMatch = searchableValues.some((value) => {
+            return String(value || "").toLowerCase().includes(searchValue);
+          });
+
+          if (!hasSearchMatch) {
+            return [];
+          }
+        }
+
+        return [`
+          <tr>
+            <td>${escapeHtml(product.partNumber)}</td>
+            <td>${escapeHtml(stockCardNo)}</td>
+            <td>${escapeHtml(product.description)}</td>
+            <td>${escapeHtml(product.category)}</td>
+            <td class="qty">${quantity}</td>
+            <td>${escapeHtml(stockStatusType)}</td>
+            <td>${escapeHtml(pocKeyIn)}</td>
+            <td>${escapeHtml(remark)}</td>
+          </tr>
+        `];
+      });
+
+      document.getElementById("inventoryRows").innerHTML = rows.length
+        ? rows.join("")
+        : '<tr><td class="empty-row" colspan="8">No inventory records yet.</td></tr>';
+
+      updateDashboard();
+    }
+
+    function clearLookup() {
+      document.getElementById("lookupDescription").textContent = "Enter part number";
+      document.getElementById("lookupCategory").textContent = "-";
+      hideMessage(lookupMessage);
+      hideMessage(stockMessage);
+    }
+
+    function updateLookup() {
+      const partNumber = document.getElementById("entryPartNumber").value;
+      if (!partNumber.trim()) {
+        clearLookup();
+        return null;
+      }
+
+      const product = findProduct(partNumber);
+      if (!product) {
+        document.getElementById("lookupDescription").textContent = "Not found";
+        document.getElementById("lookupCategory").textContent = "-";
+        showMessage(lookupMessage, "Part number not found. Please create product master first.");
+        hideMessage(stockMessage);
+        return null;
+      }
+
+      if (isInactiveProduct(product)) {
+        document.getElementById("lookupDescription").textContent = "Inactive product";
+        document.getElementById("lookupCategory").textContent = product.category;
+        showMessage(lookupMessage, "Product is Inactive. Set it to Active before creating a new stock entry.");
+        hideMessage(stockMessage);
+        return null;
+      }
+
+      document.getElementById("lookupDescription").textContent = product.description;
+      document.getElementById("lookupCategory").textContent = product.category;
+      hideMessage(lookupMessage);
+      return product;
+    }
+
+    function updateAdjustmentFields() {
+      const operationType = document.getElementById("operationType").value;
+      const stockCardNo = document.getElementById("stockCardNo");
+      const adjustmentReason = document.getElementById("adjustmentReason");
+      const adjustmentReasonField = document.getElementById("adjustmentReasonField");
+      const isAdjustment = operationType === "Adjustment";
+
+      stockCardNo.required = !isAdjustment;
+      stockCardNo.placeholder = isAdjustment ? "Optional for adjustment" : "Example: SC-2026-001";
+      adjustmentReason.required = isAdjustment;
+      adjustmentReason.disabled = !isAdjustment;
+      adjustmentReasonField.classList.toggle("hidden", !isAdjustment);
+
+      if (!isAdjustment) {
+        adjustmentReason.value = "";
+      }
+    }
+
+    document.querySelectorAll(".nav-button").forEach((button) => {
+      button.addEventListener("click", function() {
+        switchPage(this.dataset.page);
+      });
+    });
+
+    loginForm.addEventListener("submit", function(event) {
+      event.preventDefault();
+
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value;
+      const user = users.find((item) => {
+        return item.username.toLowerCase() === username.toLowerCase() && item.password === password;
+      });
+
+      if (!user) {
+        showMessage(loginMessage, "Invalid username or password.");
+        return;
+      }
+
+      login(user);
+    });
+
+    document.getElementById("logoutButton").addEventListener("click", logout);
+
+    document.getElementById("productMasterRows").addEventListener("click", function(event) {
+      const editButton = event.target.closest("[data-edit-product-id]");
+      const deleteButton = event.target.closest("[data-delete-product-id]");
+
+      if (editButton) {
+        const productId = Number(editButton.dataset.editProductId);
+        const product = productMasters.find((item) => item.id === productId);
+        if (product) {
+          setProductEditMode(product);
+        }
+        return;
+      }
+
+      if (deleteButton) {
+        const productId = Number(deleteButton.dataset.deleteProductId);
+        const product = productMasters.find((item) => item.id === productId);
+        if (!product) {
+          return;
+        }
+
+        if (!confirm(`Delete product ${product.partNumber}?`)) {
+          return;
+        }
+
+        deleteProductMaster(productId);
+      }
+    });
+
+    cancelProductEditButton.addEventListener("click", function() {
+      clearProductEditMode();
+      hideMessage(masterMessage);
+    });
+
+    importProductCsvButton.addEventListener("click", function() {
+      productCsvInput.click();
+    });
+
+    productCsvInput.addEventListener("change", async function() {
+      const file = productCsvInput.files[0];
+      if (!file) {
+        return;
+      }
+
+      const summary = {
+        imported: 0,
+        updated: 0,
+        skipped: 0
+      };
+
+      try {
+        const csvText = await file.text();
+        const rows = parseCsv(csvText);
+        const headerRow = rows.shift() || [];
+        const headers = headerRow.map(normalizeHeader);
+        const partNumberIndex = headers.indexOf("part number");
+        const descriptionIndex = headers.indexOf("product description");
+        const categoryIndex = headers.indexOf("category");
+        const statusIndex = headers.indexOf("status");
+
+        if (partNumberIndex === -1 || descriptionIndex === -1 || categoryIndex === -1) {
+          showStatusMessage(masterMessage, "CSV must include Part Number, Product Description, and Category columns.", "error");
+          return;
+        }
+
+        const knownPartNumbers = new Set(productMasters.map((product) => product.partNumber));
+
+        for (const row of rows) {
+          const isEmptyRow = row.every((cell) => !cell.trim());
+          if (isEmptyRow) {
+  summary.skipped += 1;
+  console.log("Skipped row: Empty row", row);
+  continue;
+}
+
+          const partNumber = normalizePartNumber(row[partNumberIndex] || "");
+          const description = (row[descriptionIndex] || "").trim();
+          const category = (row[categoryIndex] || "").trim();
+          const status = statusIndex === -1 ? "Active" : normalizeProductStatus((row[statusIndex] || "").trim());
+if (!partNumber || !description || !category) {
+  summary.skipped += 1;
+  console.log("Skipped row: Missing Part Number / Description / Category", row);
+  continue;
+}
+          if (!partNumber || !description || !category) {
+            summary.skipped += 1;
+            continue;
+          }
+
+          await upsertProductMaster({
+            part_number: partNumber,
+            description,
+            category,
+            status
+          });
+
+          if (knownPartNumbers.has(partNumber)) {
+            summary.updated += 1;
+          } else {
+            summary.imported += 1;
+            knownPartNumbers.add(partNumber);
+          }
+        }
+
+        await loadProductsFromDatabase();
+        updateLookup();
+        clearProductEditMode();
+        showStatusMessage(
+          masterMessage,
+          `Import complete. Total imported: ${summary.imported}. Total updated: ${summary.updated}. Total skipped: ${summary.skipped}.`
+        );
+      } catch (error) {
+        showStatusMessage(masterMessage, error.message || "Cannot import CSV file.", "error");
+      } finally {
+        productCsvInput.value = "";
+      }
+    });
+
+    exportProductCsvButton.addEventListener("click", function() {
+      const rows = [
+        ["Part Number", "Product Description", "Category", "Status"],
+        ...productMasters.map((product) => [
+          product.partNumber,
+          product.description,
+          product.category === "-" ? "" : product.category,
+          normalizeProductStatus(product.status)
+        ])
+      ];
+
+      downloadCsv("datacom-product-master.csv", rows);
+      showStatusMessage(masterMessage, `Exported ${productMasters.length} product master records.`);
+    });
+
+    exportStockHistoryCsvButton.addEventListener("click", function() {
+      const rows = [
+        ["Operation Type", "Stock Card No.", "Part Number", "Quantity", "Location", "Category", "Stock Status Type", "Shipment", "POC Key In", "Remark"],
+        ...movements.map((movement) => {
+          const product = getProductByPartNumber(movement.partNumber);
+
+          return [
+            movement.operationType,
+            movement.stockCardNo,
+            movement.partNumber,
+            movement.quantity,
+            movement.location,
+            product?.category || "",
+            movement.stockStatusType,
+            movement.shipment,
+            movement.pocKeyIn,
+            movement.remark
+          ];
+        })
+      ];
+
+      downloadCsv("datacom-stock-entry-history.csv", rows);
+      showMessage(stockMessage, `Exported ${movements.length} stock entry history records.`);
+    });
+
+    importStockHistoryCsvButton.addEventListener("click", function() {
+      stockHistoryCsvInput.click();
+    });
+
+    stockHistoryCsvInput.addEventListener("change", async function() {
+      const file = stockHistoryCsvInput.files[0];
+      if (!file) {
+        return;
+      }
+
+      const summary = {
+        imported: 0,
+        skipped: 0
+      };
+
+      try {
+        const csvText = await file.text();
+        const rows = parseCsv(csvText);
+        const headerRow = rows.shift() || [];
+        const headers = headerRow.map(normalizeHeader);
+        const operationTypeIndex = headers.indexOf("operation type");
+        const stockCardNoIndex = headers.indexOf("stock card no.");
+        const partNumberIndex = headers.indexOf("part number");
+        const quantityIndex = headers.indexOf("quantity");
+        const locationIndex = headers.indexOf("location");
+        const categoryIndex = headers.indexOf("category");
+        const stockStatusTypeIndex = headers.indexOf("stock status type");
+        const shipmentIndex = headers.indexOf("shipment");
+        const pocKeyInIndex = headers.indexOf("poc key in");
+        const remarkIndex = headers.indexOf("remark");
+
+        if (
+          operationTypeIndex === -1 ||
+          stockCardNoIndex === -1 ||
+          partNumberIndex === -1 ||
+          quantityIndex === -1 ||
+          locationIndex === -1 ||
+          categoryIndex === -1 ||
+          stockStatusTypeIndex === -1 ||
+          shipmentIndex === -1 ||
+          pocKeyInIndex === -1 ||
+          remarkIndex === -1
+        ) {
+          showMessage(stockMessage, "CSV must include Operation Type, Stock Card No., Part Number, Quantity, Location, Category, Stock Status Type, Shipment, POC Key In, and Remark columns.");
+          return;
+        }
+
+        for (const row of rows) {
+          if (row.every((cell) => !cell.trim())) {
+            summary.skipped += 1;
+            continue;
+          }
+
+          const partNumber = normalizePartNumber(row[partNumberIndex] || "");
+          const product = findProduct(partNumber);
+
+          if (!product) {
+            summary.skipped += 1;
+            continue;
+          }
+
+          const payload = {
+            operation_type: (row[operationTypeIndex] || "").trim(),
+            stock_card_no: (row[stockCardNoIndex] || "").trim(),
+            adjustment_reason: null,
+            part_number: partNumber,
+            quantity: Number(row[quantityIndex]) || 0,
+            location: (row[locationIndex] || "").trim(),
+            stock_status_type: (row[stockStatusTypeIndex] || "").trim(),
+            shipment: (row[shipmentIndex] || "").trim(),
+            poc_key_in: (row[pocKeyInIndex] || "").trim(),
+            remark: (row[remarkIndex] || "").trim()
+          };
+
+          const response = await fetch(`${API_URL}/stock-movements`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+          });
+
+          if (!response.ok) {
+            summary.skipped += 1;
+            continue;
+          }
+
+          summary.imported += 1;
+        }
+
+        await loadStockMovementsFromDatabase();
+        updateLookup();
+        showMessage(stockMessage, `Import complete. Total imported: ${summary.imported}. Total skipped: ${summary.skipped}.`);
+      } catch (error) {
+        showMessage(stockMessage, "Cannot import CSV file.");
+      } finally {
+        stockHistoryCsvInput.value = "";
+      }
+    });
+
+    productMasterForm.addEventListener("submit", async function(event) {
+  event.preventDefault();
+
+  const product = {
+    part_number: normalizePartNumber(document.getElementById("masterPartNumber").value),
+    description: document.getElementById("masterDescription").value.trim(),
+    category: document.getElementById("masterCategory").value,
+    status: document.getElementById("masterStatus").value
+  };
+
+  try {
+    const isEditing = editingProductId !== null;
+    const response = await fetch(isEditing ? `${API_URL}/products/${editingProductId}` : `${API_URL}/products`, {
+      method: isEditing ? "PUT" : "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(product)
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      showStatusMessage(masterMessage, data.error || "Failed to save product.", "error");
+      return;
+    }
+
+    if (isEditing) {
+      movements.forEach((movement) => {
+        if (movement.partNumber === editingProductOriginalPartNumber) {
+          movement.partNumber = product.part_number;
+        }
+      });
+
+      const entryPartNumber = document.getElementById("entryPartNumber");
+      if (normalizePartNumber(entryPartNumber.value) === editingProductOriginalPartNumber) {
+        entryPartNumber.value = product.part_number;
+      }
+    }
+
+    showStatusMessage(masterMessage, isEditing ? "Product master updated." : "Product master saved to PostgreSQL.");
+
+    await loadProductsFromDatabase();
+    updateLookup();
+    clearProductEditMode();
+
+  } catch (error) {
+    showStatusMessage(masterMessage, "Cannot connect to backend API.", "error");
+  }
+});
+    productMasterForm.addEventListener("reset", function(event) {
+      if (editingProductId !== null) {
+        event.preventDefault();
+        clearProductEditMode();
+        hideMessage(masterMessage);
+      }
+    });
+    document.getElementById("entryPartNumber").addEventListener("input", updateLookup);
+    document.getElementById("entryPartNumber").addEventListener("change", updateLookup);
+    document.getElementById("operationType").addEventListener("change", updateAdjustmentFields);
+    showZeroQuantityToggle.addEventListener("change", renderInventory);
+    productMasterSearch.addEventListener("input", renderProductMaster);
+    productMasterSearch.addEventListener("change", renderProductMaster);
+    inventoryCategoryFilter.addEventListener("change", function() {
+      selectedInventoryCategory = inventoryCategoryFilter.value;
+      renderInventory();
+    });
+    stockCardSearch.addEventListener("input", loadInventoryView);
+    stockCardSearch.addEventListener("change", loadInventoryView);
+    stockHistorySearch.addEventListener("input", renderStockEntryHistory);
+    stockHistorySearch.addEventListener("change", renderStockEntryHistory);
+
+    stockEntryForm.addEventListener("submit", async function(event) {
+      event.preventDefault();
+
+      const product = updateLookup();
+      if (!product) {
+        showMessage(lookupMessage, "Part number not found. Please create product master first.");
+        hideMessage(stockMessage);
+        return;
+      }
+
+      try {
+  const response = await fetch(`${API_URL}/stock-movements`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      operation_type: document.getElementById("operationType").value,
+      stock_card_no: document.getElementById("stockCardNo").value.trim(),
+      adjustment_reason:
+  document.getElementById("operationType").value === "Adjustment"
+    ? document.getElementById("adjustmentReason").value
+    : null,
+      part_number: product.partNumber,
+      quantity: Number(document.getElementById("quantity").value) || 0,
+      location: document.getElementById("location").value.trim(),
+      stock_status_type: document.getElementById("stockStatusType").value,
+      shipment: document.getElementById("shipment").value.trim(),
+      poc_key_in: document.getElementById("pocKeyIn").value,
+      remark: document.getElementById("entryRemark").value.trim()
+    })
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    showMessage(stockMessage, data.error || "Failed to save stock movement.");
+    return;
+  }
+
+  movements.push(mapStockMovement(data.movement));
+  stockEntryForm.reset();
+  clearLookup();
+
+  renderInventory();
+  renderStockEntryHistory();
+
+  showMessage(stockMessage, "Stock entry saved to PostgreSQL.");
+
+} catch (error) {
+  showMessage(stockMessage, "Cannot connect to backend API.");
+}
+});
+    stockEntryForm.addEventListener("reset", function() {
+      clearLookup();
+      setTimeout(updateAdjustmentFields, 0);
+    });
+function mapStockMovement(item) {
+  return {
+    id: item.id,
+    operationType: item.operation_type,
+    stockCardNo: item.stock_card_no,
+    adjustmentReason: item.adjustment_reason,
+    partNumber: item.part_number,
+    quantity: Number(item.quantity) || 0,
+    location: item.location,
+    stockStatusType: item.stock_status_type,
+    shipment: item.shipment,
+    pocKeyIn: item.poc_key_in,
+    remark: item.remark || "",
+    createdAt: item.created_at
+  };
+}
+
+async function loadStockMovementsFromDatabase() {
+  try {
+    const response = await fetch(`${API_URL}/stock-movements`);
+    const stockMovements = await response.json();
+
+    movements.splice(0, movements.length, ...stockMovements.map(mapStockMovement));
+    renderInventory();
+    renderStockEntryHistory();
+
+  } catch (error) {
+    console.error("Failed to load stock movements:", error);
+  }
+}
+
+async function loadProductsFromDatabase() {
+  try {
+    const response = await fetch(`${API_URL}/products`);
+    const products = await response.json();
+
+    productMasters = products.map((item) => ({
+      id: item.id,
+      partNumber: item.part_number,
+      description: item.description,
+      category: item.category || "-",
+      status: normalizeProductStatus(item.status)
+    }));
+
+    renderProductMaster();
+    await loadStockMovementsFromDatabase();
+
+  } catch (error) {
+    console.error("Failed to load products:", error);
+  }
+}
+loadProductsFromDatabase();
+updateAdjustmentFields();
+  </script>
+</body>
+</html>

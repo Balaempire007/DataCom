@@ -1,0 +1,15 @@
+{
+  "name": "datacom-inventory-system",
+  "version": "1.0.0",
+  "description": "Datacom Inventory System",
+  "main": "main.js",
+  "scripts": {
+    "start": "node main.js",
+    "start:local-server": "node main.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "express": "^4.22.1",
+    "pg": "^8.20.0"
+  }
+}
