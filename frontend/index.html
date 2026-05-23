@@ -593,7 +593,7 @@
       <form id="loginForm">
         <div class="field">
           <label for="username">Username</label>
-          <input id="username" type="text" placeholder="Example: Funz" required>
+          <input id="username" type="text" placeholder="Enter Username">
         </div>
         <div class="field" style="margin-top: 16px;">
           <label for="password">Password</label>
@@ -603,9 +603,10 @@
       </form>
 
       <div class="message error" id="loginMessage">Invalid username or password.</div>
-      <div class="login-help">
+     <!-- <div class="login-help">
         Sample users: Funz / admin, June / warehouse, Devi / warehouse, Sales / sales.
       </div>
+      -->
     </div>
   </section>
 
@@ -908,11 +909,12 @@
                 <th>Shipment</th>
                 <th>POC Key In</th>
                 <th>Remark</th>
+                <th class="action-cell">Action</th>
               </tr>
             </thead>
             <tbody id="stockHistoryRows">
               <tr>
-                <td class="empty-row" colspan="11">No stock entry history yet.</td>
+                <td class="empty-row" colspan="12">No stock entry history yet.</td>
               </tr>
             </tbody>
           </table>
@@ -1000,9 +1002,9 @@
       }
     ];
 
-   const API_URL = `${window.location.origin}/api`;
-let productMasters = [];
-const movements = [];
+    const API_URL = "http://localhost:5000/api";
+    let productMasters = [];
+    const movements = [];
     let selectedInventoryCategory = "all";
     let editingProductId = null;
     let editingProductOriginalPartNumber = "";
@@ -1434,13 +1436,16 @@ const movements = [];
             <td>${escapeHtml(movement.shipment || "-")}</td>
             <td>${escapeHtml(movement.pocKeyIn || "-")}</td>
             <td>${escapeHtml(movement.remark || "-")}</td>
+            <td class="action-cell">
+              <button class="row-action danger" type="button" data-delete-movement-id="${movement.id}">Delete</button>
+            </td>
           </tr>
         `;
       });
 
       document.getElementById("stockHistoryRows").innerHTML = rows.length
         ? rows.join("")
-        : `<tr><td class="empty-row" colspan="11">${movements.length ? "No matching stock entry history." : "No stock entry history yet."}</td></tr>`;
+        : `<tr><td class="empty-row" colspan="12">${movements.length ? "No matching stock entry history." : "No stock entry history yet."}</td></tr>`;
     }
 
     function renderInventory() {
@@ -1622,6 +1627,18 @@ const movements = [];
       }
     });
 
+    // ✅ NEW: Delete stock movement handler
+    document.getElementById("stockHistoryRows").addEventListener("click", function(event) {
+      const deleteButton = event.target.closest("[data-delete-movement-id]");
+      if (deleteButton) {
+        const movementId = Number(deleteButton.dataset.deleteMovementId);
+        if (!confirm('Delete this stock movement? This action cannot be undone.')) {
+          return;
+        }
+        deleteStockMovement(movementId);
+      }
+    });
+
     cancelProductEditButton.addEventListener("click", function() {
       clearProductEditMode();
       hideMessage(masterMessage);
@@ -1663,22 +1680,18 @@ const movements = [];
         for (const row of rows) {
           const isEmptyRow = row.every((cell) => !cell.trim());
           if (isEmptyRow) {
-  summary.skipped += 1;
-  console.log("Skipped row: Empty row", row);
-  continue;
-}
+            summary.skipped += 1;
+            console.log("Skipped row: Empty row", row);
+            continue;
+          }
 
           const partNumber = normalizePartNumber(row[partNumberIndex] || "");
           const description = (row[descriptionIndex] || "").trim();
           const category = (row[categoryIndex] || "").trim();
           const status = statusIndex === -1 ? "Active" : normalizeProductStatus((row[statusIndex] || "").trim());
-if (!partNumber || !description || !category) {
-  summary.skipped += 1;
-  console.log("Skipped row: Missing Part Number / Description / Category", row);
-  continue;
-}
           if (!partNumber || !description || !category) {
             summary.skipped += 1;
+            console.log("Skipped row: Missing Part Number / Description / Category", row);
             continue;
           }
 
@@ -1852,55 +1865,56 @@ if (!partNumber || !description || !category) {
     });
 
     productMasterForm.addEventListener("submit", async function(event) {
-  event.preventDefault();
+      event.preventDefault();
 
-  const product = {
-    part_number: normalizePartNumber(document.getElementById("masterPartNumber").value),
-    description: document.getElementById("masterDescription").value.trim(),
-    category: document.getElementById("masterCategory").value,
-    status: document.getElementById("masterStatus").value
-  };
+      const product = {
+        part_number: normalizePartNumber(document.getElementById("masterPartNumber").value),
+        description: document.getElementById("masterDescription").value.trim(),
+        category: document.getElementById("masterCategory").value,
+        status: document.getElementById("masterStatus").value
+      };
 
-  try {
-    const isEditing = editingProductId !== null;
-    const response = await fetch(isEditing ? `${API_URL}/products/${editingProductId}` : `${API_URL}/products`, {
-      method: isEditing ? "PUT" : "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(product)
+      try {
+        const isEditing = editingProductId !== null;
+        const response = await fetch(isEditing ? `${API_URL}/products/${editingProductId}` : `${API_URL}/products`, {
+          method: isEditing ? "PUT" : "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(product)
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          showStatusMessage(masterMessage, data.error || "Failed to save product.", "error");
+          return;
+        }
+
+        if (isEditing) {
+          movements.forEach((movement) => {
+            if (movement.partNumber === editingProductOriginalPartNumber) {
+              movement.partNumber = product.part_number;
+            }
+          });
+
+          const entryPartNumber = document.getElementById("entryPartNumber");
+          if (normalizePartNumber(entryPartNumber.value) === editingProductOriginalPartNumber) {
+            entryPartNumber.value = product.part_number;
+          }
+        }
+
+        showStatusMessage(masterMessage, isEditing ? "Product master updated." : "Product master saved to PostgreSQL.");
+
+        await loadProductsFromDatabase();
+        updateLookup();
+        clearProductEditMode();
+
+      } catch (error) {
+        showStatusMessage(masterMessage, "Cannot connect to backend API.", "error");
+      }
     });
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      showStatusMessage(masterMessage, data.error || "Failed to save product.", "error");
-      return;
-    }
-
-    if (isEditing) {
-      movements.forEach((movement) => {
-        if (movement.partNumber === editingProductOriginalPartNumber) {
-          movement.partNumber = product.part_number;
-        }
-      });
-
-      const entryPartNumber = document.getElementById("entryPartNumber");
-      if (normalizePartNumber(entryPartNumber.value) === editingProductOriginalPartNumber) {
-        entryPartNumber.value = product.part_number;
-      }
-    }
-
-    showStatusMessage(masterMessage, isEditing ? "Product master updated." : "Product master saved to PostgreSQL.");
-
-    await loadProductsFromDatabase();
-    updateLookup();
-    clearProductEditMode();
-
-  } catch (error) {
-    showStatusMessage(masterMessage, "Cannot connect to backend API.", "error");
-  }
-});
     productMasterForm.addEventListener("reset", function(event) {
       if (editingProductId !== null) {
         event.preventDefault();
@@ -1908,6 +1922,7 @@ if (!partNumber || !description || !category) {
         hideMessage(masterMessage);
       }
     });
+
     document.getElementById("entryPartNumber").addEventListener("input", updateLookup);
     document.getElementById("entryPartNumber").addEventListener("change", updateLookup);
     document.getElementById("operationType").addEventListener("change", updateAdjustmentFields);
@@ -1934,105 +1949,145 @@ if (!partNumber || !description || !category) {
       }
 
       try {
-  const response = await fetch(`${API_URL}/stock-movements`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      operation_type: document.getElementById("operationType").value,
-      stock_card_no: document.getElementById("stockCardNo").value.trim(),
-      adjustment_reason:
-  document.getElementById("operationType").value === "Adjustment"
-    ? document.getElementById("adjustmentReason").value
-    : null,
-      part_number: product.partNumber,
-      quantity: Number(document.getElementById("quantity").value) || 0,
-      location: document.getElementById("location").value.trim(),
-      stock_status_type: document.getElementById("stockStatusType").value,
-      shipment: document.getElementById("shipment").value.trim(),
-      poc_key_in: document.getElementById("pocKeyIn").value,
-      remark: document.getElementById("entryRemark").value.trim()
-    })
-  });
+        const response = await fetch(`${API_URL}/stock-movements`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            operation_type: document.getElementById("operationType").value,
+            stock_card_no: document.getElementById("stockCardNo").value.trim(),
+            adjustment_reason:
+              document.getElementById("operationType").value === "Adjustment"
+                ? document.getElementById("adjustmentReason").value
+                : null,
+            part_number: product.partNumber,
+            quantity: Number(document.getElementById("quantity").value) || 0,
+            location: document.getElementById("location").value.trim(),
+            stock_status_type: document.getElementById("stockStatusType").value,
+            shipment: document.getElementById("shipment").value.trim(),
+            poc_key_in: document.getElementById("pocKeyIn").value,
+            remark: document.getElementById("entryRemark").value.trim()
+          })
+        });
 
-  const data = await response.json();
+        const data = await response.json();
 
-  if (!response.ok) {
-    showMessage(stockMessage, data.error || "Failed to save stock movement.");
-    return;
-  }
+        if (!response.ok) {
+          showMessage(stockMessage, data.error || "Failed to save stock movement.");
+          return;
+        }
 
-  movements.push(mapStockMovement(data.movement));
-  stockEntryForm.reset();
-  clearLookup();
+        movements.push(mapStockMovement(data.movement));
+        stockEntryForm.reset();
+        clearLookup();
 
-  renderInventory();
-  renderStockEntryHistory();
+        renderInventory();
+        renderStockEntryHistory();
 
-  showMessage(stockMessage, "Stock entry saved to PostgreSQL.");
+        showMessage(stockMessage, "Stock entry saved to PostgreSQL.");
 
-} catch (error) {
-  showMessage(stockMessage, "Cannot connect to backend API.");
-}
-});
+      } catch (error) {
+        showMessage(stockMessage, "Cannot connect to backend API.");
+      }
+    });
+
     stockEntryForm.addEventListener("reset", function() {
       clearLookup();
       setTimeout(updateAdjustmentFields, 0);
     });
-function mapStockMovement(item) {
-  return {
-    id: item.id,
-    operationType: item.operation_type,
-    stockCardNo: item.stock_card_no,
-    adjustmentReason: item.adjustment_reason,
-    partNumber: item.part_number,
-    quantity: Number(item.quantity) || 0,
-    location: item.location,
-    stockStatusType: item.stock_status_type,
-    shipment: item.shipment,
-    pocKeyIn: item.poc_key_in,
-    remark: item.remark || "",
-    createdAt: item.created_at
-  };
-}
 
-async function loadStockMovementsFromDatabase() {
-  try {
-    const response = await fetch(`${API_URL}/stock-movements`);
-    const stockMovements = await response.json();
+    function mapStockMovement(item) {
+      return {
+        id: item.id,
+        operationType: item.operation_type,
+        stockCardNo: item.stock_card_no,
+        adjustmentReason: item.adjustment_reason,
+        partNumber: item.part_number,
+        quantity: Number(item.quantity) || 0,
+        location: item.location,
+        stockStatusType: item.stock_status_type,
+        shipment: item.shipment,
+        pocKeyIn: item.poc_key_in,
+        remark: item.remark || "",
+        createdAt: item.created_at
+      };
+    }
 
-    movements.splice(0, movements.length, ...stockMovements.map(mapStockMovement));
-    renderInventory();
-    renderStockEntryHistory();
+    // ✅ NEW: Delete stock movement function
+    async function deleteStockMovement(movementId) {
+      try {
+        const response = await fetch(`${API_URL}/stock-movements/${movementId}`, {
+          method: 'DELETE'
+        });
+        const data = await response.json();
 
-  } catch (error) {
-    console.error("Failed to load stock movements:", error);
-  }
-}
+        if (!response.ok) {
+          showMessage(stockMessage, data.error || 'Failed to delete stock movement.');
+          return;
+        }
 
-async function loadProductsFromDatabase() {
-  try {
-    const response = await fetch(`${API_URL}/products`);
-    const products = await response.json();
+        await loadStockMovementsFromDatabase();
+        renderInventory();
+        showMessage(stockMessage, 'Stock movement deleted successfully.');
+      } catch (error) {
+        showMessage(stockMessage, 'Cannot connect to backend API.');
+      }
+    }
 
-    productMasters = products.map((item) => ({
-      id: item.id,
-      partNumber: item.part_number,
-      description: item.description,
-      category: item.category || "-",
-      status: normalizeProductStatus(item.status)
-    }));
+    async function loadStockMovementsFromDatabase() {
+      try {
+        const response = await fetch(`${API_URL}/stock-movements`);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        const stockMovements = await response.json();
+        if (!Array.isArray(stockMovements)) {
+          throw new Error('Invalid response format – expected an array');
+        }
 
-    renderProductMaster();
-    await loadStockMovementsFromDatabase();
+        movements.splice(0, movements.length, ...stockMovements.map(mapStockMovement));
+        renderInventory();
+        renderStockEntryHistory();
+      } catch (error) {
+        console.error("Failed to load stock movements:", error.message);
+        movements.splice(0, movements.length);
+        renderInventory();
+        renderStockEntryHistory();
+      }
+    }
 
-  } catch (error) {
-    console.error("Failed to load products:", error);
-  }
-}
-loadProductsFromDatabase();
-updateAdjustmentFields();
+    async function loadProductsFromDatabase() {
+      try {
+        const response = await fetch(`${API_URL}/products`);
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || `HTTP ${response.status}`);
+        }
+        const products = await response.json();
+        if (!Array.isArray(products)) {
+          throw new Error('Invalid response format – expected an array');
+        }
+
+        productMasters = products.map((item) => ({
+          id: item.id,
+          partNumber: item.part_number,
+          description: item.description,
+          category: item.category || "-",
+          status: normalizeProductStatus(item.status)
+        }));
+
+        renderProductMaster();
+        await loadStockMovementsFromDatabase();
+      } catch (error) {
+        console.error("Failed to load products:", error.message);
+        productMasters = [];
+        renderProductMaster();
+      }
+    }
+
+    loadProductsFromDatabase();
+    updateAdjustmentFields();
   </script>
 </body>
 </html>
