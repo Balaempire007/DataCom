@@ -43,6 +43,154 @@ apiRouter.get('/', (req, res) => {
   res.json({ message: 'Datacom Inventory API is running' })
 })
 
+// ========== USER AUTH ==========
+// Login
+apiRouter.post('/login', async (req, res) => {
+  const { username, password } = req.body
+  if (!username || !password) {
+    return res.status(400).json({ error: 'Username and password required.' })
+  }
+
+  try {
+    const client = await pool.connect()
+    try {
+      const result = await client.query(
+        'SELECT * FROM users WHERE LOWER(username) = LOWER($1) AND password = $2',
+        [username, password]
+      )
+      if (result.rows.length === 0) {
+        return res.status(401).json({ error: 'Invalid username or password.' })
+      }
+      const user = result.rows[0]
+      res.json({
+        id: user.id,
+        username: user.username,
+        role: user.role,
+        allowedPages: user.allowed_pages
+      })
+    } finally {
+      client.release()
+    }
+  } catch (err) {
+    console.error('DB error (POST /login):', err.message)
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// Sign Up (self-service)
+apiRouter.post('/signup', async (req, res) => {
+  const { username, password } = req.body
+  if (!username || !password) {
+    return res.status(400).json({ error: 'Username and password required.' })
+  }
+
+  const role = 'sales'
+  const allowed_pages = ['inventory-view']
+
+  try {
+    const client = await pool.connect()
+    try {
+      const result = await client.query(
+        `INSERT INTO users (username, password, role, allowed_pages) VALUES ($1,$2,$3,$4) RETURNING id, username, role, allowed_pages`,
+        [username, password, role, allowed_pages]
+      )
+      res.json({ message: 'Account created successfully. You can now log in.', user: result.rows[0] })
+    } finally {
+      client.release()
+    }
+  } catch (err) {
+    if (err.code === '23505') return res.status(409).json({ error: 'Username already exists. Please choose another.' })
+    console.error('DB error (POST /signup):', err.message)
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// Forgot Password
+apiRouter.post('/forgot-password', async (req, res) => {
+  const { username, newPassword } = req.body
+  if (!username || !newPassword) {
+    return res.status(400).json({ error: 'Username and new password required.' })
+  }
+
+  try {
+    const client = await pool.connect()
+    try {
+      const check = await client.query('SELECT id FROM users WHERE LOWER(username) = LOWER($1)', [username])
+      if (check.rows.length === 0) return res.status(404).json({ error: 'Username not found.' })
+      await client.query('UPDATE users SET password = $1 WHERE id = $2', [newPassword, check.rows[0].id])
+      res.json({ message: 'Password reset successfully.' })
+    } finally {
+      client.release()
+    }
+  } catch (err) {
+    console.error('DB error (POST /forgot-password):', err.message)
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ========== USER MANAGEMENT (admin) ==========
+// Get all users
+apiRouter.get('/users', async (req, res) => {
+  try {
+    const client = await pool.connect()
+    try {
+      const result = await client.query('SELECT id, username, role, allowed_pages, created_at FROM users ORDER BY id')
+      res.json(result.rows)
+    } finally {
+      client.release()
+    }
+  } catch (err) {
+    console.error('DB error (GET /users):', err.message)
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// Create user (admin)
+apiRouter.post('/users', async (req, res) => {
+  const { username, password, role = 'sales', allowed_pages } = req.body
+  if (!username || !password) {
+    return res.status(400).json({ error: 'Username and password required.' })
+  }
+
+  try {
+    const client = await pool.connect()
+    try {
+      const result = await client.query(
+        `INSERT INTO users (username, password, role, allowed_pages) VALUES ($1,$2,$3,$4) RETURNING id, username, role, allowed_pages`,
+        [username, password, role, allowed_pages || ['inventory-view']]
+      )
+      res.json({ message: 'User created successfully', user: result.rows[0] })
+    } finally {
+      client.release()
+    }
+  } catch (err) {
+    if (err.code === '23505') return res.status(409).json({ error: 'Username already exists.' })
+    console.error('DB error (POST /users):', err.message)
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// Delete user
+apiRouter.delete('/users/:id', async (req, res) => {
+  const userId = Number(req.params.id)
+  if (!Number.isInteger(userId) || userId <= 0) return res.status(400).json({ error: 'Invalid user id' })
+
+  try {
+    const client = await pool.connect()
+    try {
+      const result = await client.query('DELETE FROM users WHERE id = $1 RETURNING *', [userId])
+      if (result.rows.length === 0) return res.status(404).json({ error: 'User not found' })
+      res.json({ message: 'User deleted successfully', user: result.rows[0] })
+    } finally {
+      client.release()
+    }
+  } catch (err) {
+    console.error('DB error (DELETE /users):', err.message)
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ========== PRODUCTS ==========
 // GET products
 apiRouter.get('/products', async (req, res) => {
   try {
@@ -149,6 +297,7 @@ apiRouter.delete('/products/:id', async (req, res) => {
   }
 })
 
+// ========== STOCK MOVEMENTS ==========
 // GET stock movements
 apiRouter.get('/stock-movements', async (req, res) => {
   try {
@@ -192,30 +341,17 @@ apiRouter.post('/stock-movements', async (req, res) => {
   }
 })
 
-// ✅ NEW: DELETE stock movement
+// DELETE stock movement
 apiRouter.delete('/stock-movements/:id', async (req, res) => {
   const movementId = Number(req.params.id)
-
-  if (!Number.isInteger(movementId) || movementId <= 0) {
-    return res.status(400).json({ error: 'Invalid stock movement id' })
-  }
+  if (!Number.isInteger(movementId) || movementId <= 0) return res.status(400).json({ error: 'Invalid stock movement id' })
 
   try {
     const client = await pool.connect()
     try {
-      const result = await client.query(
-        'DELETE FROM stock_movements WHERE id = $1 RETURNING *',
-        [movementId]
-      )
-
-      if (result.rows.length === 0) {
-        return res.status(404).json({ error: 'Stock movement not found' })
-      }
-
-      res.json({
-        message: 'Stock movement deleted successfully',
-        movement: result.rows[0]
-      })
+      const result = await client.query('DELETE FROM stock_movements WHERE id = $1 RETURNING *', [movementId])
+      if (result.rows.length === 0) return res.status(404).json({ error: 'Stock movement not found' })
+      res.json({ message: 'Stock movement deleted successfully', movement: result.rows[0] })
     } finally {
       client.release()
     }
@@ -225,6 +361,7 @@ apiRouter.delete('/stock-movements/:id', async (req, res) => {
   }
 })
 
+// ========== FINAL MIDDLEWARE ==========
 app.use('/', apiRouter)
 app.use('/api', apiRouter)
 

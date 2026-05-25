@@ -527,6 +527,19 @@
       text-align: right;
     }
 
+    /* Forgot password link */
+    .forgot-link, .signup-link {
+      display: inline-block;
+      margin-top: 12px;
+      color: #1d6f9f;
+      cursor: pointer;
+      font-size: 13px;
+      text-decoration: underline;
+    }
+    .signup-link {
+      margin-left: 15px;
+    }
+
     @media (max-width: 980px) {
       .header-inner {
         align-items: flex-start;
@@ -580,6 +593,7 @@
   </style>
 </head>
 <body>
+  <!-- Login Screen -->
   <section class="login-screen" id="loginScreen">
     <div class="login-card">
       <div class="login-brand">
@@ -593,23 +607,68 @@
       <form id="loginForm">
         <div class="field">
           <label for="username">Username</label>
-          <input id="username" type="text" placeholder="Enter Username">
+          <input id="username" type="text" placeholder="Enter Username" required>
         </div>
         <div class="field" style="margin-top: 16px;">
           <label for="password">Password</label>
           <input id="password" type="password" placeholder="Enter password" required>
         </div>
         <button class="primary" type="submit" style="margin-top: 20px; width: 100%;">Login</button>
+        <div style="text-align: center;">
+          <span class="forgot-link" id="forgotLink">Forgot Password?</span>
+          <span class="signup-link" id="signupLink">Sign Up</span>
+        </div>
       </form>
 
       <div class="message error" id="loginMessage">Invalid username or password.</div>
-     <!-- <div class="login-help">
-        Sample users: Funz / admin, June / warehouse, Devi / warehouse, Sales / sales.
-      </div>
-      -->
     </div>
   </section>
 
+  <!-- Forgot Password Modal -->
+  <div class="hidden" id="forgotModal" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:100;">
+    <div class="login-card" style="margin:0;">
+      <h2 style="margin-bottom:18px;">Reset Password</h2>
+      <form id="forgotForm">
+        <div class="field">
+          <label for="forgotUsername">Username</label>
+          <input id="forgotUsername" type="text" required>
+        </div>
+        <div class="field" style="margin-top:16px;">
+          <label for="forgotNewPassword">New Password</label>
+          <input id="forgotNewPassword" type="password" required>
+        </div>
+        <div class="actions" style="justify-content:space-between;">
+          <button type="button" id="cancelForgot" class="secondary">Cancel</button>
+          <button type="submit" class="primary">Reset Password</button>
+        </div>
+      </form>
+      <div class="message success" id="forgotMessage"></div>
+    </div>
+  </div>
+
+  <!-- Sign Up Modal -->
+  <div class="hidden" id="signupModal" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:100;">
+    <div class="login-card" style="margin:0;">
+      <h2 style="margin-bottom:18px;">Create Account</h2>
+      <form id="signupForm">
+        <div class="field">
+          <label for="signupUsername">Username</label>
+          <input id="signupUsername" type="text" required>
+        </div>
+        <div class="field" style="margin-top:16px;">
+          <label for="signupPassword">Password</label>
+          <input id="signupPassword" type="password" required>
+        </div>
+        <div class="actions" style="justify-content:space-between;">
+          <button type="button" id="cancelSignup" class="secondary">Cancel</button>
+          <button type="submit" class="primary">Sign Up</button>
+        </div>
+      </form>
+      <div class="message success" id="signupMessage"></div>
+    </div>
+  </div>
+
+  <!-- Header -->
   <header class="app-header hidden" id="appHeader">
     <div class="header-inner">
       <div class="brand">
@@ -625,6 +684,7 @@
         <button class="nav-button" type="button" data-page="product-master">Product Master</button>
         <button class="nav-button" type="button" data-page="stock-entry">Stock Entry</button>
         <button class="nav-button" type="button" data-page="inventory-view">Inventory View</button>
+        <button class="nav-button hidden" type="button" data-page="user-management">User Management</button>
       </nav>
 
       <div class="user-area" id="userArea">
@@ -634,7 +694,9 @@
     </div>
   </header>
 
+  <!-- Main App -->
   <main class="app hidden" id="appMain">
+    <!-- Dashboard Page -->
     <section class="page is-active" id="dashboard">
       <div class="page-title">
         <h2>Dashboard</h2>
@@ -661,6 +723,7 @@
       </div>
     </section>
 
+    <!-- Product Master Page -->
     <section class="page" id="product-master">
       <div class="page-title">
         <h2>Product Master</h2>
@@ -768,6 +831,7 @@
       </div>
     </section>
 
+    <!-- Stock Entry Page -->
     <section class="page" id="stock-entry">
       <div class="page-title">
         <h2>Stock Entry</h2>
@@ -922,6 +986,7 @@
       </div>
     </section>
 
+    <!-- Inventory View Page -->
     <section class="page" id="inventory-view">
       <div class="page-title">
         <h2>Inventory View</h2>
@@ -972,36 +1037,85 @@
         </div>
       </div>
     </section>
+
+    <!-- User Management Page (Admin Only) -->
+    <section class="page" id="user-management">
+      <div class="page-title">
+        <h2>User Management</h2>
+        <p>Create and manage user accounts for the inventory system.</p>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h3>Create New User</h3>
+          </div>
+        </div>
+        <div class="panel-body">
+          <form id="createUserForm">
+            <div class="grid">
+              <div class="field">
+                <label for="newUsername">Username</label>
+                <input id="newUsername" type="text" required>
+              </div>
+              <div class="field">
+                <label for="newPassword">Password</label>
+                <input id="newPassword" type="password" required>
+              </div>
+              <div class="field">
+                <label for="newRole">Role</label>
+                <select id="newRole" required>
+                  <option value="admin">Admin</option>
+                  <option value="warehouse">Warehouse</option>
+                  <option value="sales">Sales</option>
+                </select>
+              </div>
+              <div class="field full">
+                <label>Allowed Pages</label>
+                <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:4px;">
+                  <label><input type="checkbox" value="dashboard" class="newAllowedPages"> Dashboard</label>
+                  <label><input type="checkbox" value="product-master" class="newAllowedPages"> Product Master</label>
+                  <label><input type="checkbox" value="stock-entry" class="newAllowedPages"> Stock Entry</label>
+                  <label><input type="checkbox" value="inventory-view" class="newAllowedPages" checked> Inventory View</label>
+                  <label><input type="checkbox" value="user-management" class="newAllowedPages"> User Management</label>
+                </div>
+              </div>
+            </div>
+            <div class="actions">
+              <button class="primary" type="submit">Create User</button>
+            </div>
+          </form>
+          <div class="message success" id="createUserMessage"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h3>Existing Users</h3>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Username</th>
+                <th>Role</th>
+                <th>Allowed Pages</th>
+                <th class="action-cell">Action</th>
+              </tr>
+            </thead>
+            <tbody id="userListRows">
+              <tr><td colspan="4" class="empty-row">Loading users...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
   </main>
 
   <script>
-    const users = [
-      {
-        username: "Funz",
-        role: "admin",
-        password: "admin123",
-        allowedPages: ["dashboard", "product-master", "stock-entry", "inventory-view"]
-      },
-      {
-        username: "June",
-        role: "warehouse",
-        password: "june123",
-        allowedPages: ["stock-entry", "inventory-view"]
-      },
-      {
-        username: "Devi",
-        role: "warehouse",
-        password: "devi123",
-        allowedPages: ["stock-entry", "inventory-view"]
-      },
-      {
-        username: "Sales",
-        role: "sales",
-        password: "sales123",
-        allowedPages: ["inventory-view"]
-      }
-    ];
-
+    // ---------- GLOBAL VARS ----------
     const API_URL = "https://datacom-krer.onrender.com/api";
     let productMasters = [];
     const movements = [];
@@ -1009,6 +1123,8 @@
     let editingProductId = null;
     let editingProductOriginalPartNumber = "";
     let currentUser = null;
+
+    // DOM elements
     const loginForm = document.getElementById("loginForm");
     const loginMessage = document.getElementById("loginMessage");
     const loginScreen = document.getElementById("loginScreen");
@@ -1016,6 +1132,19 @@
     const appMain = document.getElementById("appMain");
     const userArea = document.getElementById("userArea");
     const userChip = document.getElementById("userChip");
+    const forgotLink = document.getElementById("forgotLink");
+    const forgotModal = document.getElementById("forgotModal");
+    const forgotForm = document.getElementById("forgotForm");
+    const forgotMessage = document.getElementById("forgotMessage");
+    const cancelForgot = document.getElementById("cancelForgot");
+    const signupLink = document.getElementById("signupLink");
+    const signupModal = document.getElementById("signupModal");
+    const signupForm = document.getElementById("signupForm");
+    const signupMessage = document.getElementById("signupMessage");
+    const cancelSignup = document.getElementById("cancelSignup");
+    const createUserForm = document.getElementById("createUserForm");
+    const createUserMessage = document.getElementById("createUserMessage");
+    const userListRows = document.getElementById("userListRows");
     const productMasterForm = document.getElementById("productMasterForm");
     const stockEntryForm = document.getElementById("stockEntryForm");
     const masterMessage = document.getElementById("masterMessage");
@@ -1037,12 +1166,28 @@
     const importStockHistoryCsvButton = document.getElementById("importStockHistoryCsvButton");
     const exportStockHistoryCsvButton = document.getElementById("exportStockHistoryCsvButton");
 
-    function normalizePartNumber(value) {
-      return value.trim().toUpperCase();
+    // ---------- HELPER FUNCTIONS ----------
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
     }
 
-    function normalizeStockCardNo(value) {
-      return String(value || "").trim().toUpperCase();
+    function showMessage(element, text, isError = false) {
+      element.textContent = text;
+      element.classList.remove("success", "error");
+      element.classList.add(isError ? "error" : "success", "is-visible");
+    }
+
+    function hideMessage(element) {
+      element.classList.remove("is-visible", "success", "error");
+    }
+
+    function normalizePartNumber(value) {
+      return value.trim().toUpperCase();
     }
 
     function normalizeProductStatus(value) {
@@ -1058,30 +1203,207 @@
       return productMasters.find((product) => product.partNumber === normalized);
     }
 
-    function escapeHtml(value) {
-      return String(value)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
+    function switchPage(pageId) {
+      if (!currentUser || !currentUser.allowedPages.includes(pageId)) {
+        return;
+      }
+      document.querySelectorAll(".page").forEach(page => page.classList.toggle("is-active", page.id === pageId));
+      document.querySelectorAll(".nav-button").forEach(btn => btn.classList.toggle("is-active", btn.dataset.page === pageId));
     }
 
-    function showMessage(element, text) {
-      element.textContent = text;
-      element.classList.add("is-visible");
+    function applyRolePermissions() {
+      document.querySelectorAll(".nav-button").forEach(btn => {
+        const page = btn.dataset.page;
+        btn.classList.toggle("hidden", !currentUser.allowedPages.includes(page));
+      });
+      const isAdmin = currentUser.role === "admin";
+      document.getElementById("showZeroQuantityControl")?.classList.toggle("hidden", !isAdmin);
+      if (!isAdmin) document.getElementById("showZeroQuantityToggle").checked = false;
+      document.querySelector(".nav").classList.add("is-visible");
+      userArea.classList.add("is-visible");
+      userChip.textContent = `${currentUser.username} / ${currentUser.role}`;
+      switchPage(currentUser.allowedPages[0]);
+      renderInventory();
+      if (currentUser.allowedPages.includes("user-management")) {
+        loadUserList();
+      }
     }
 
-    function showStatusMessage(element, text, type = "success") {
-      element.textContent = text;
-      element.classList.remove("success", "error");
-      element.classList.add(type, "is-visible");
+    // ---------- AUTHENTICATION ----------
+    loginForm.addEventListener("submit", async function(event) {
+      event.preventDefault();
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value;
+
+      try {
+        const response = await fetch(`${API_URL}/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Login failed");
+
+        currentUser = data; // { id, username, role, allowedPages }
+        loginScreen.classList.add("hidden");
+        appHeader.classList.remove("hidden");
+        appMain.classList.remove("hidden");
+        hideMessage(loginMessage);
+        applyRolePermissions();
+      } catch (error) {
+        showMessage(loginMessage, error.message, true);
+      }
+    });
+
+    document.getElementById("logoutButton").addEventListener("click", function() {
+      currentUser = null;
+      loginForm.reset();
+      document.querySelector(".nav").classList.remove("is-visible");
+      userArea.classList.remove("is-visible");
+      appHeader.classList.add("hidden");
+      appMain.classList.add("hidden");
+      loginScreen.classList.remove("hidden");
+      document.querySelectorAll(".page").forEach(p => p.classList.remove("is-active"));
+      document.getElementById("dashboard").classList.add("is-active");
+    });
+
+    // ---------- FORGOT PASSWORD ----------
+    forgotLink.addEventListener("click", function() {
+      forgotModal.classList.remove("hidden");
+    });
+
+    cancelForgot.addEventListener("click", function() {
+      forgotModal.classList.add("hidden");
+      hideMessage(forgotMessage);
+    });
+
+    forgotForm.addEventListener("submit", async function(event) {
+      event.preventDefault();
+      const username = document.getElementById("forgotUsername").value.trim();
+      const newPassword = document.getElementById("forgotNewPassword").value;
+
+      try {
+        const response = await fetch(`${API_URL}/forgot-password`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, newPassword })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Reset failed");
+        showMessage(forgotMessage, data.message || "Password reset successfully.");
+        forgotForm.reset();
+      } catch (error) {
+        showMessage(forgotMessage, error.message, true);
+      }
+    });
+
+    // ---------- SIGN UP ----------
+    signupLink.addEventListener("click", function() {
+      signupModal.classList.remove("hidden");
+    });
+
+    cancelSignup.addEventListener("click", function() {
+      signupModal.classList.add("hidden");
+      hideMessage(signupMessage);
+    });
+
+    signupForm.addEventListener("submit", async function(event) {
+      event.preventDefault();
+      const username = document.getElementById("signupUsername").value.trim();
+      const password = document.getElementById("signupPassword").value;
+
+      try {
+        const response = await fetch(`${API_URL}/signup`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Signup failed");
+        showMessage(signupMessage, data.message || "Account created. You can now log in.");
+        signupForm.reset();
+      } catch (error) {
+        showMessage(signupMessage, error.message, true);
+      }
+    });
+
+    // ---------- USER MANAGEMENT ----------
+    async function loadUserList() {
+      try {
+        const response = await fetch(`${API_URL}/users`);
+        if (!response.ok) throw new Error("Failed to load users");
+        const users = await response.json();
+        renderUserTable(users);
+      } catch (error) {
+        userListRows.innerHTML = `<tr><td colspan="4" class="empty-row">Error loading users.</td></tr>`;
+      }
     }
 
-    function hideMessage(element) {
-      element.classList.remove("is-visible");
+    function renderUserTable(users) {
+      if (!users || users.length === 0) {
+        userListRows.innerHTML = `<tr><td colspan="4" class="empty-row">No users found.</td></tr>`;
+        return;
+      }
+      userListRows.innerHTML = users.map(user => `
+        <tr>
+          <td>${escapeHtml(user.username)}</td>
+          <td>${escapeHtml(user.role)}</td>
+          <td>${escapeHtml((user.allowed_pages || []).join(", "))}</td>
+          <td class="action-cell">
+            <button class="row-action danger" type="button" data-delete-user-id="${user.id}">Delete</button>
+          </td>
+        </tr>
+      `).join("");
     }
 
+    userListRows.addEventListener("click", function(event) {
+      const deleteBtn = event.target.closest("[data-delete-user-id]");
+      if (deleteBtn) {
+        const userId = Number(deleteBtn.dataset.deleteUserId);
+        if (!confirm("Delete this user?")) return;
+        deleteUser(userId);
+      }
+    });
+
+    async function deleteUser(userId) {
+      try {
+        const response = await fetch(`${API_URL}/users/${userId}`, { method: "DELETE" });
+        if (!response.ok) {
+          const data = await response.json();
+          showMessage(createUserMessage, data.error || "Delete failed", true);
+          return;
+        }
+        showMessage(createUserMessage, "User deleted.");
+        loadUserList();
+      } catch (error) {
+        showMessage(createUserMessage, "Cannot connect to backend.", true);
+      }
+    }
+
+    createUserForm.addEventListener("submit", async function(event) {
+      event.preventDefault();
+      const username = document.getElementById("newUsername").value.trim();
+      const password = document.getElementById("newPassword").value;
+      const role = document.getElementById("newRole").value;
+      const allowedPages = Array.from(document.querySelectorAll(".newAllowedPages:checked")).map(cb => cb.value);
+
+      try {
+        const response = await fetch(`${API_URL}/users`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password, role, allowed_pages: allowedPages })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Creation failed");
+        showMessage(createUserMessage, "User created successfully.");
+        createUserForm.reset();
+        loadUserList();
+      } catch (error) {
+        showMessage(createUserMessage, error.message, true);
+      }
+    });
+
+    // ---------- INVENTORY FUNCTIONS ----------
     function parseCsv(text) {
       const rows = [];
       let row = [];
@@ -1235,65 +1557,6 @@
       } catch (error) {
         showStatusMessage(masterMessage, "Cannot connect to backend API.", "error");
       }
-    }
-
-    function switchPage(pageId) {
-      if (!currentUser || !currentUser.allowedPages.includes(pageId)) {
-        return;
-      }
-
-      document.querySelectorAll(".page").forEach((page) => {
-        page.classList.toggle("is-active", page.id === pageId);
-      });
-
-      document.querySelectorAll(".nav-button").forEach((button) => {
-        button.classList.toggle("is-active", button.dataset.page === pageId);
-      });
-    }
-
-    function applyRolePermissions() {
-      document.querySelectorAll(".nav-button").forEach((button) => {
-        const isAllowed = currentUser.allowedPages.includes(button.dataset.page);
-        button.classList.toggle("hidden", !isAllowed);
-      });
-
-      const isAdmin = currentUser.role === "admin";
-      showZeroQuantityControl.classList.toggle("hidden", !isAdmin);
-
-      if (!isAdmin) {
-        showZeroQuantityToggle.checked = false;
-      }
-
-      document.querySelector(".nav").classList.add("is-visible");
-      userArea.classList.add("is-visible");
-      userChip.textContent = `${currentUser.username} / ${currentUser.role}`;
-      switchPage(currentUser.allowedPages[0]);
-      renderInventory();
-    }
-
-    function login(user) {
-      currentUser = user;
-      loginScreen.classList.add("hidden");
-      appHeader.classList.remove("hidden");
-      appMain.classList.remove("hidden");
-      hideMessage(loginMessage);
-      applyRolePermissions();
-    }
-
-    function logout() {
-      currentUser = null;
-      loginForm.reset();
-      document.querySelector(".nav").classList.remove("is-visible");
-      userArea.classList.remove("is-visible");
-      appHeader.classList.add("hidden");
-      appMain.classList.add("hidden");
-      loginScreen.classList.remove("hidden");
-      document.querySelectorAll(".page").forEach((page) => page.classList.remove("is-active"));
-      document.getElementById("dashboard").classList.add("is-active");
-      document.querySelectorAll(".nav-button").forEach((button) => {
-        button.classList.remove("hidden", "is-active");
-      });
-      document.querySelector('[data-page="dashboard"]').classList.add("is-active");
     }
 
     function calculateCurrentQuantity(partNumber) {
@@ -1574,30 +1837,101 @@
       }
     }
 
+    // Delete stock movement
+    async function deleteStockMovement(movementId) {
+      try {
+        const response = await fetch(`${API_URL}/stock-movements/${movementId}`, {
+          method: 'DELETE'
+        });
+        const data = await response.json();
+
+        if (!response.ok) {
+          showMessage(stockMessage, data.error || 'Failed to delete stock movement.');
+          return;
+        }
+
+        await loadStockMovementsFromDatabase();
+        renderInventory();
+        showMessage(stockMessage, 'Stock movement deleted successfully.');
+      } catch (error) {
+        showMessage(stockMessage, 'Cannot connect to backend API.');
+      }
+    }
+
+    function mapStockMovement(item) {
+      return {
+        id: item.id,
+        operationType: item.operation_type,
+        stockCardNo: item.stock_card_no,
+        adjustmentReason: item.adjustment_reason,
+        partNumber: item.part_number,
+        quantity: Number(item.quantity) || 0,
+        location: item.location,
+        stockStatusType: item.stock_status_type,
+        shipment: item.shipment,
+        pocKeyIn: item.poc_key_in,
+        remark: item.remark || "",
+        createdAt: item.created_at
+      };
+    }
+
+    async function loadStockMovementsFromDatabase() {
+      try {
+        const response = await fetch(`${API_URL}/stock-movements`);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        const stockMovements = await response.json();
+        if (!Array.isArray(stockMovements)) {
+          throw new Error('Invalid response format – expected an array');
+        }
+
+        movements.splice(0, movements.length, ...stockMovements.map(mapStockMovement));
+        renderInventory();
+        renderStockEntryHistory();
+      } catch (error) {
+        console.error("Failed to load stock movements:", error.message);
+        movements.splice(0, movements.length);
+        renderInventory();
+        renderStockEntryHistory();
+      }
+    }
+
+    async function loadProductsFromDatabase() {
+      try {
+        const response = await fetch(`${API_URL}/products`);
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || `HTTP ${response.status}`);
+        }
+        const products = await response.json();
+        if (!Array.isArray(products)) {
+          throw new Error('Invalid response format – expected an array');
+        }
+
+        productMasters = products.map((item) => ({
+          id: item.id,
+          partNumber: item.part_number,
+          description: item.description,
+          category: item.category || "-",
+          status: normalizeProductStatus(item.status)
+        }));
+
+        renderProductMaster();
+        await loadStockMovementsFromDatabase();
+      } catch (error) {
+        console.error("Failed to load products:", error.message);
+        productMasters = [];
+        renderProductMaster();
+      }
+    }
+
+    // Event listeners for inventory
     document.querySelectorAll(".nav-button").forEach((button) => {
       button.addEventListener("click", function() {
         switchPage(this.dataset.page);
       });
     });
-
-    loginForm.addEventListener("submit", function(event) {
-      event.preventDefault();
-
-      const username = document.getElementById("username").value.trim();
-      const password = document.getElementById("password").value;
-      const user = users.find((item) => {
-        return item.username.toLowerCase() === username.toLowerCase() && item.password === password;
-      });
-
-      if (!user) {
-        showMessage(loginMessage, "Invalid username or password.");
-        return;
-      }
-
-      login(user);
-    });
-
-    document.getElementById("logoutButton").addEventListener("click", logout);
 
     document.getElementById("productMasterRows").addEventListener("click", function(event) {
       const editButton = event.target.closest("[data-edit-product-id]");
@@ -1627,7 +1961,6 @@
       }
     });
 
-    // ✅ NEW: Delete stock movement handler
     document.getElementById("stockHistoryRows").addEventListener("click", function(event) {
       const deleteButton = event.target.closest("[data-delete-movement-id]");
       if (deleteButton) {
@@ -1926,7 +2259,7 @@
     document.getElementById("entryPartNumber").addEventListener("input", updateLookup);
     document.getElementById("entryPartNumber").addEventListener("change", updateLookup);
     document.getElementById("operationType").addEventListener("change", updateAdjustmentFields);
-    showZeroQuantityToggle.addEventListener("change", renderInventory);
+    if (showZeroQuantityToggle) showZeroQuantityToggle.addEventListener("change", renderInventory);
     productMasterSearch.addEventListener("input", renderProductMaster);
     productMasterSearch.addEventListener("change", renderProductMaster);
     inventoryCategoryFilter.addEventListener("change", function() {
@@ -1996,95 +2329,6 @@
       clearLookup();
       setTimeout(updateAdjustmentFields, 0);
     });
-
-    function mapStockMovement(item) {
-      return {
-        id: item.id,
-        operationType: item.operation_type,
-        stockCardNo: item.stock_card_no,
-        adjustmentReason: item.adjustment_reason,
-        partNumber: item.part_number,
-        quantity: Number(item.quantity) || 0,
-        location: item.location,
-        stockStatusType: item.stock_status_type,
-        shipment: item.shipment,
-        pocKeyIn: item.poc_key_in,
-        remark: item.remark || "",
-        createdAt: item.created_at
-      };
-    }
-
-    // ✅ NEW: Delete stock movement function
-    async function deleteStockMovement(movementId) {
-      try {
-        const response = await fetch(`${API_URL}/stock-movements/${movementId}`, {
-          method: 'DELETE'
-        });
-        const data = await response.json();
-
-        if (!response.ok) {
-          showMessage(stockMessage, data.error || 'Failed to delete stock movement.');
-          return;
-        }
-
-        await loadStockMovementsFromDatabase();
-        renderInventory();
-        showMessage(stockMessage, 'Stock movement deleted successfully.');
-      } catch (error) {
-        showMessage(stockMessage, 'Cannot connect to backend API.');
-      }
-    }
-
-    async function loadStockMovementsFromDatabase() {
-      try {
-        const response = await fetch(`${API_URL}/stock-movements`);
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        }
-        const stockMovements = await response.json();
-        if (!Array.isArray(stockMovements)) {
-          throw new Error('Invalid response format – expected an array');
-        }
-
-        movements.splice(0, movements.length, ...stockMovements.map(mapStockMovement));
-        renderInventory();
-        renderStockEntryHistory();
-      } catch (error) {
-        console.error("Failed to load stock movements:", error.message);
-        movements.splice(0, movements.length);
-        renderInventory();
-        renderStockEntryHistory();
-      }
-    }
-
-    async function loadProductsFromDatabase() {
-      try {
-        const response = await fetch(`${API_URL}/products`);
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error || `HTTP ${response.status}`);
-        }
-        const products = await response.json();
-        if (!Array.isArray(products)) {
-          throw new Error('Invalid response format – expected an array');
-        }
-
-        productMasters = products.map((item) => ({
-          id: item.id,
-          partNumber: item.part_number,
-          description: item.description,
-          category: item.category || "-",
-          status: normalizeProductStatus(item.status)
-        }));
-
-        renderProductMaster();
-        await loadStockMovementsFromDatabase();
-      } catch (error) {
-        console.error("Failed to load products:", error.message);
-        productMasters = [];
-        renderProductMaster();
-      }
-    }
 
     loadProductsFromDatabase();
     updateAdjustmentFields();
