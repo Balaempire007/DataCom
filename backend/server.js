@@ -170,6 +170,36 @@ apiRouter.post('/users', async (req, res) => {
   }
 })
 
+// ✅ UPDATE USER (role & allowed pages)
+apiRouter.put('/users/:id', async (req, res) => {
+  const userId = Number(req.params.id)
+  if (!Number.isInteger(userId) || userId <= 0) return res.status(400).json({ error: 'Invalid user id' })
+
+  const { role, allowed_pages } = req.body
+  if (!role && !allowed_pages) {
+    return res.status(400).json({ error: 'Please provide role or allowed_pages to update.' })
+  }
+
+  try {
+    const client = await pool.connect()
+    try {
+      const check = await client.query('SELECT id FROM users WHERE id = $1', [userId])
+      if (check.rows.length === 0) return res.status(404).json({ error: 'User not found' })
+
+      const result = await client.query(
+        `UPDATE users SET role = COALESCE($1, role), allowed_pages = COALESCE($2, allowed_pages) WHERE id = $3 RETURNING id, username, role, allowed_pages`,
+        [role || null, allowed_pages || null, userId]
+      )
+      res.json({ message: 'User updated successfully', user: result.rows[0] })
+    } finally {
+      client.release()
+    }
+  } catch (err) {
+    console.error('DB error (PUT /users):', err.message)
+    res.status(500).json({ error: err.message })
+  }
+})
+
 // Delete user
 apiRouter.delete('/users/:id', async (req, res) => {
   const userId = Number(req.params.id)
