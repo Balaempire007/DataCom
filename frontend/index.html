@@ -1230,6 +1230,10 @@
       element.classList.remove("is-visible", "success", "error");
     }
 
+    function showStatusMessage(element, text, type = "success") {
+      showMessage(element, text, type === "error");
+    }
+
     function normalizePartNumber(value) {
       return value.trim().toUpperCase();
     }
