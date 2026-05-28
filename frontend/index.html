@@ -540,6 +540,14 @@
       margin-left: 15px;
     }
 
+    /* NEW: clickable product row hint */
+    .product-row {
+      cursor: pointer;
+    }
+    .product-row:hover {
+      background: #f0f6ff;
+    }
+
     @media (max-width: 980px) {
       .header-inner {
         align-items: flex-start;
@@ -1819,53 +1827,34 @@
       loadInventoryView();
     }
 
+    // ✅ UPDATED loadInventoryView with expandable movement details
     function loadInventoryView() {
       const searchValue = stockCardSearch.value.trim().toLowerCase();
 
       const rows = productMasters.flatMap((product) => {
-        const productMovements = movements.filter((movement) => movement.partNumber === product.partNumber);
-        const latestMovement = productMovements[productMovements.length - 1];
-        const matchedStockCardMovement = searchValue
-          ? productMovements.find((movement) => String(movement.stockCardNo || "").toLowerCase().includes(searchValue))
-          : null;
+        const productMovements = movements.filter(m => m.partNumber === product.partNumber);
         const quantity = calculateCurrentQuantity(product.partNumber);
         if (!shouldShowInventoryProduct(product, quantity)) {
           return [];
         }
-
         if (selectedInventoryCategory !== "all" && product.category !== selectedInventoryCategory) {
           return [];
         }
 
+        const latestMovement = productMovements[productMovements.length - 1];
         const stockStatusType = latestMovement?.stockStatusType || "-";
-        const stockCardNo = matchedStockCardMovement?.stockCardNo || latestMovement?.stockCardNo || "-";
+        const stockCardNo = latestMovement?.stockCardNo || "-";
         const pocKeyIn = latestMovement?.pocKeyIn || "-";
         const remark = latestMovement?.remark || "No remark";
 
         if (searchValue) {
-          const searchableValues = [
-            matchedStockCardMovement?.stockCardNo,
-            latestMovement?.stockCardNo,
-            product.partNumber,
-            product.description,
-            product.category,
-            quantity,
-            stockStatusType,
-            pocKeyIn,
-            remark
-          ];
-
-          const hasSearchMatch = searchableValues.some((value) => {
-            return String(value || "").toLowerCase().includes(searchValue);
-          });
-
-          if (!hasSearchMatch) {
-            return [];
-          }
+          const searchable = [stockCardNo, product.partNumber, product.description, product.category, quantity, stockStatusType, pocKeyIn, remark];
+          if (!searchable.some(v => String(v || "").toLowerCase().includes(searchValue))) return [];
         }
 
-        return [`
-          <tr>
+        // Main product row (clickable)
+        const productRow = `
+          <tr class="product-row" data-partnumber="${escapeHtml(product.partNumber)}">
             <td>${escapeHtml(product.partNumber)}</td>
             <td>${escapeHtml(stockCardNo)}</td>
             <td>${escapeHtml(product.description)}</td>
@@ -1875,7 +1864,50 @@
             <td>${escapeHtml(pocKeyIn)}</td>
             <td>${escapeHtml(remark)}</td>
           </tr>
-        `];
+        `;
+
+        // Detail row (hidden by default)
+        let detailRow = '';
+        if (productMovements.length > 0) {
+          detailRow = `
+            <tr class="movement-detail" data-partnumber="${escapeHtml(product.partNumber)}" style="display:none;">
+              <td colspan="8" style="padding:0;">
+                <table style="width:100%; margin:8px 0; border-left:3px solid #1d6f9f;">
+                  <thead>
+                    <tr>
+                      <th>Movement ID</th>
+                      <th>Operation</th>
+                      <th>Stock Card No.</th>
+                      <th>Qty</th>
+                      <th>Location</th>
+                      <th>Status</th>
+                      <th>Shipment</th>
+                      <th>POC</th>
+                      <th>Remark</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${productMovements.map(m => `
+                      <tr>
+                        <td>${m.id}</td>
+                        <td>${escapeHtml(m.operationType)}</td>
+                        <td>${escapeHtml(m.stockCardNo || "-")}</td>
+                        <td class="qty">${m.quantity}</td>
+                        <td>${escapeHtml(m.location)}</td>
+                        <td>${escapeHtml(m.stockStatusType)}</td>
+                        <td>${escapeHtml(m.shipment || "-")}</td>
+                        <td>${escapeHtml(m.pocKeyIn || "-")}</td>
+                        <td>${escapeHtml(m.remark || "-")}</td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </td>
+            </tr>
+          `;
+        }
+
+        return [productRow, detailRow];
       });
 
       document.getElementById("inventoryRows").innerHTML = rows.length
@@ -1883,6 +1915,17 @@
         : '<tr><td class="empty-row" colspan="8">No inventory records yet.</td></tr>';
 
       updateDashboard();
+
+      // Attach click handlers to toggle detail rows
+      document.querySelectorAll("#inventoryRows .product-row").forEach(row => {
+        row.addEventListener("click", function() {
+          const partNumber = this.dataset.partnumber;
+          const detailRow = document.querySelector(`#inventoryRows .movement-detail[data-partnumber="${partNumber}"]`);
+          if (detailRow) {
+            detailRow.style.display = detailRow.style.display === "none" ? "table-row" : "none";
+          }
+        });
+      });
     }
 
     function clearLookup() {
