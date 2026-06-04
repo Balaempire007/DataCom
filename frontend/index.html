@@ -527,7 +527,6 @@
       text-align: right;
     }
 
-    /* Forgot password link */
     .forgot-link, .signup-link {
       display: inline-block;
       margin-top: 12px;
@@ -540,7 +539,6 @@
       margin-left: 15px;
     }
 
-    /* NEW: clickable product row hint */
     .product-row {
       cursor: pointer;
     }
@@ -553,11 +551,9 @@
         align-items: flex-start;
         flex-direction: column;
       }
-
       .nav {
         justify-content: flex-start;
       }
-
       .dashboard-grid,
       .grid,
       .lookup-panel {
@@ -569,31 +565,25 @@
       .app {
         padding: 16px;
       }
-
       .brand,
       .panel-header {
         align-items: flex-start;
         flex-direction: column;
       }
-
       .panel-tools {
         width: 100%;
       }
-
       .dashboard-grid,
       .grid,
       .lookup-panel {
         grid-template-columns: 1fr;
       }
-
       .actions {
         flex-direction: column-reverse;
       }
-
       button {
         width: 100%;
       }
-
       .inventory-filter-field {
         max-width: none;
       }
@@ -631,6 +621,78 @@
       <div class="message error" id="loginMessage">Invalid username or password.</div>
     </div>
   </section>
+
+  <!-- Edit Stock Entry Modal -->
+  <div class="hidden" id="editStockModal" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:100;">
+    <div class="login-card" style="margin:0; max-width: 700px; width:90%; max-height:90%; overflow-y:auto;">
+      <h2 style="margin-bottom:18px;">Edit Stock Entry</h2>
+      <form id="editStockForm">
+        <input type="hidden" id="editStockId">
+        <div class="grid">
+          <div class="field">
+            <label for="editOperationType">Operation Type</label>
+            <select id="editOperationType" required>
+              <option value="">Select</option>
+              <option value="Add Stock">Add Stock</option>
+              <option value="Remove Stock">Remove Stock</option>
+              <option value="Adjustment">Adjustment</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="editStockCardNo">Stock Card No.</label>
+            <input id="editStockCardNo" type="text" required>
+          </div>
+          <div class="field">
+            <label for="editPartNumber">Part Number</label>
+            <input id="editPartNumber" type="text" required>
+          </div>
+          <div class="field">
+            <label for="editQuantity">Quantity</label>
+            <input id="editQuantity" type="number" min="0" required>
+          </div>
+          <div class="field">
+            <label for="editLocation">Location</label>
+            <input id="editLocation" type="text" required>
+          </div>
+          <div class="field">
+            <label for="editStockStatusType">Stock Status Type</label>
+            <select id="editStockStatusType" required>
+              <option value="">Select</option>
+              <option value="Available">Available</option>
+              <option value="Reserved">Reserved</option>
+              <option value="Modify">Modify</option>
+              <option value="Sold">Sold</option>
+              <option value="Showroom Unit">Showroom Unit</option>
+              <option value="Warranty Replacement">Warranty Replacement</option>
+              <option value="Returned Stock">Returned Stock</option>
+              <option value="Damaged Stock">Damaged Stock</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="editShipment">Shipment</label>
+            <input id="editShipment" type="text">
+          </div>
+          <div class="field">
+            <label for="editPocKeyIn">POC Key In</label>
+            <select id="editPocKeyIn" required>
+              <option value="">Select</option>
+              <option value="June">June</option>
+              <option value="Devi">Devi</option>
+            </select>
+          </div>
+          <div class="field full">
+            <label for="editRemark">Remark</label>
+            <textarea id="editRemark" rows="2"></textarea>
+          </div>
+        </div>
+        <div class="actions" style="justify-content:space-between;">
+          <button type="button" id="cancelEditStockBtn" class="secondary">Cancel</button>
+          <button type="submit" class="primary">Save Changes</button>
+        </div>
+      </form>
+      <div class="message success" id="editStockMessage"></div>
+    </div>
+  </div>
 
   <!-- Forgot Password Modal -->
   <div class="hidden" id="forgotModal" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:100;">
@@ -676,7 +738,8 @@
     </div>
   </div>
 
-   <div class="hidden" id="editUserModal" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:100;">
+  <!-- Edit User Modal -->
+  <div class="hidden" id="editUserModal" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:100;">
     <div class="login-card" style="margin:0; max-width: 500px;">
       <h2 style="margin-bottom:18px;">Edit User</h2>
       <form id="editUserForm">
@@ -711,6 +774,7 @@
       <div class="message success" id="editUserMessage"></div>
     </div>
   </div>
+
   <!-- Header -->
   <header class="app-header hidden" id="appHeader">
     <div class="header-inner">
@@ -745,7 +809,6 @@
         <h2>Dashboard</h2>
         <p>Quick overview for product records, stock movements, and sales-facing inventory.</p>
       </div>
-
       <div class="dashboard-grid">
         <div class="stat-card">
           <span>Product Masters</span>
@@ -830,7 +893,6 @@
               <button class="primary" type="submit" id="saveProductButton">Save Product Master</button>
             </div>
           </form>
-
           <div class="message success" id="masterMessage"></div>
         </div>
       </div>
@@ -1159,8 +1221,6 @@
 
   <script>
     // ---------- GLOBAL VARS ----------
-    // const API_URL = "https://datacom-krer.onrender.com/api";
-    // const API_URL = "https://desktop-19n0dfj.taildafd1a.ts.net/api";
     const API_URL = "https://desktop-19n0dfj.taildafd1a.ts.net:8443/api";
     let productMasters = [];
     const movements = [];
@@ -1220,7 +1280,7 @@
     const editUserMessage = document.getElementById("editUserMessage");
     const cancelEditUserBtn = document.getElementById("cancelEditUser");
 
-    // ---------- HELPER FUNCTIONS ----------
+    // Helper functions
     function escapeHtml(value) {
       return String(value)
         .replaceAll("&", "&amp;")
@@ -1262,9 +1322,7 @@
     }
 
     function switchPage(pageId) {
-      if (!currentUser || !currentUser.allowedPages.includes(pageId)) {
-        return;
-      }
+      if (!currentUser || !currentUser.allowedPages.includes(pageId)) return;
       document.querySelectorAll(".page").forEach(page => page.classList.toggle("is-active", page.id === pageId));
       document.querySelectorAll(".nav-button").forEach(btn => btn.classList.toggle("is-active", btn.dataset.page === pageId));
     }
@@ -1282,12 +1340,10 @@
       userChip.textContent = `${currentUser.username} / ${currentUser.role}`;
       switchPage(currentUser.allowedPages[0]);
       renderInventory();
-      if (currentUser.allowedPages.includes("user-management")) {
-        loadUserList();
-      }
+      if (currentUser.allowedPages.includes("user-management")) loadUserList();
     }
 
-    // ---------- AUTHENTICATION ----------
+    // Authentication
     loginForm.addEventListener("submit", async function(event) {
       event.preventDefault();
       const username = document.getElementById("username").value.trim();
@@ -1302,7 +1358,7 @@
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || "Login failed");
 
-        currentUser = data; // { id, username, role, allowedPages }
+        currentUser = data;
         loginScreen.classList.add("hidden");
         appHeader.classList.remove("hidden");
         appMain.classList.remove("hidden");
@@ -1325,21 +1381,13 @@
       document.getElementById("dashboard").classList.add("is-active");
     });
 
-    // ---------- FORGOT PASSWORD ----------
-    forgotLink.addEventListener("click", function() {
-      forgotModal.classList.remove("hidden");
-    });
-
-    cancelForgot.addEventListener("click", function() {
-      forgotModal.classList.add("hidden");
-      hideMessage(forgotMessage);
-    });
-
+    // Forgot Password
+    forgotLink.addEventListener("click", () => forgotModal.classList.remove("hidden"));
+    cancelForgot.addEventListener("click", () => { forgotModal.classList.add("hidden"); hideMessage(forgotMessage); });
     forgotForm.addEventListener("submit", async function(event) {
       event.preventDefault();
       const username = document.getElementById("forgotUsername").value.trim();
       const newPassword = document.getElementById("forgotNewPassword").value;
-
       try {
         const response = await fetch(`${API_URL}/forgot-password`, {
           method: "POST",
@@ -1355,21 +1403,13 @@
       }
     });
 
-    // ---------- SIGN UP ----------
-    signupLink.addEventListener("click", function() {
-      signupModal.classList.remove("hidden");
-    });
-
-    cancelSignup.addEventListener("click", function() {
-      signupModal.classList.add("hidden");
-      hideMessage(signupMessage);
-    });
-
+    // Sign Up
+    signupLink.addEventListener("click", () => signupModal.classList.remove("hidden"));
+    cancelSignup.addEventListener("click", () => { signupModal.classList.add("hidden"); hideMessage(signupMessage); });
     signupForm.addEventListener("submit", async function(event) {
       event.preventDefault();
       const username = document.getElementById("signupUsername").value.trim();
       const password = document.getElementById("signupPassword").value;
-
       try {
         const response = await fetch(`${API_URL}/signup`, {
           method: "POST",
@@ -1385,7 +1425,7 @@
       }
     });
 
-    // ---------- USER MANAGEMENT ----------
+    // User Management
     async function loadUserList() {
       try {
         const response = await fetch(`${API_URL}/users`);
@@ -1415,7 +1455,6 @@
       `).join("");
     }
 
-    // Handle clicks on user list (Edit and Delete)
     userListRows.addEventListener("click", function(event) {
       const editBtn = event.target.closest("[data-edit-user-id]");
       if (editBtn) {
@@ -1429,7 +1468,6 @@
           .catch(err => console.error("Error loading users for edit:", err));
         return;
       }
-
       const deleteBtn = event.target.closest("[data-delete-user-id]");
       if (deleteBtn) {
         const userId = Number(deleteBtn.dataset.deleteUserId);
@@ -1450,17 +1488,12 @@
       editUserModal.classList.remove("hidden");
     }
 
-    cancelEditUserBtn.addEventListener("click", function() {
-      editUserModal.classList.add("hidden");
-      hideMessage(editUserMessage);
-    });
-
+    cancelEditUserBtn.addEventListener("click", () => { editUserModal.classList.add("hidden"); hideMessage(editUserMessage); });
     editUserForm.addEventListener("submit", async function(event) {
       event.preventDefault();
       const userId = editUserIdInput.value;
       const role = editRoleSelect.value;
       const allowedPages = Array.from(document.querySelectorAll(".editAllowedPages:checked")).map(cb => cb.value);
-
       try {
         const response = await fetch(`${API_URL}/users/${userId}`, {
           method: "PUT",
@@ -1477,7 +1510,6 @@
       }
     });
 
-    
     async function deleteUser(userId) {
       try {
         const response = await fetch(`${API_URL}/users/${userId}`, { method: "DELETE" });
@@ -1499,7 +1531,6 @@
       const password = document.getElementById("newPassword").value;
       const role = document.getElementById("newRole").value;
       const allowedPages = Array.from(document.querySelectorAll(".newAllowedPages:checked")).map(cb => cb.value);
-
       try {
         const response = await fetch(`${API_URL}/users`, {
           method: "POST",
@@ -1516,52 +1547,41 @@
       }
     });
 
-    // ---------- INVENTORY FUNCTIONS ----------
+    // Inventory functions
     function parseCsv(text) {
       const rows = [];
       let row = [];
       let value = "";
       let insideQuotes = false;
-
-      for (let index = 0; index < text.length; index += 1) {
-        const character = text[index];
-        const nextCharacter = text[index + 1];
-
-        if (character === '"' && insideQuotes && nextCharacter === '"') {
+      for (let i = 0; i < text.length; i++) {
+        const ch = text[i];
+        const next = text[i+1];
+        if (ch === '"' && insideQuotes && next === '"') {
           value += '"';
-          index += 1;
+          i++;
           continue;
         }
-
-        if (character === '"') {
+        if (ch === '"') {
           insideQuotes = !insideQuotes;
           continue;
         }
-
-        if (character === "," && !insideQuotes) {
+        if (ch === "," && !insideQuotes) {
           row.push(value);
           value = "";
           continue;
         }
-
-        if ((character === "\n" || character === "\r") && !insideQuotes) {
-          if (character === "\r" && nextCharacter === "\n") {
-            index += 1;
-          }
-
+        if ((ch === "\n" || ch === "\r") && !insideQuotes) {
+          if (ch === "\r" && next === "\n") i++;
           row.push(value);
           rows.push(row);
           row = [];
           value = "";
           continue;
         }
-
-        value += character;
+        value += ch;
       }
-
       row.push(value);
       rows.push(row);
-
       return rows;
     }
 
@@ -1571,21 +1591,15 @@
 
     function csvEscape(value) {
       const text = String(value ?? "");
-      if (/[",\r\n]/.test(text)) {
-        return `"${text.replaceAll('"', '""')}"`;
-      }
-
+      if (/[",\r\n]/.test(text)) return `"${text.replaceAll('"', '""')}"`;
       return text;
     }
 
     function downloadCsv(filename, rows) {
-      const csvContent = rows
-        .map((row) => row.map(csvEscape).join(","))
-        .join("\r\n");
+      const csvContent = rows.map(row => row.map(csvEscape).join(",")).join("\r\n");
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8" });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
-
       link.href = url;
       link.download = filename;
       document.body.appendChild(link);
@@ -1595,124 +1609,69 @@
     }
 
     function formatDateTime(value) {
-      if (!value) {
-        return "-";
-      }
-
+      if (!value) return "-";
       const date = new Date(value);
-      if (Number.isNaN(date.getTime())) {
-        return value;
-      }
-
+      if (isNaN(date.getTime())) return value;
       return date.toLocaleString();
     }
 
     function getProductByPartNumber(partNumber) {
-      return productMasters.find((product) => product.partNumber === partNumber);
+      return productMasters.find(p => p.partNumber === partNumber);
     }
 
     function getProductMasterCategories() {
-      return [...document.getElementById("masterCategory").options]
-        .map((option) => option.value)
-        .filter(Boolean);
+      return [...document.getElementById("masterCategory").options].map(opt => opt.value).filter(Boolean);
     }
 
     function renderInventoryCategoryFilter() {
       const categories = getProductMasterCategories();
-
-      if (selectedInventoryCategory !== "all" && !categories.includes(selectedInventoryCategory)) {
-        selectedInventoryCategory = "all";
-      }
-
-      const options = [
-        { label: "All", value: "all" },
-        ...categories.map((category) => ({ label: category, value: category }))
-      ];
-
-      inventoryCategoryFilter.innerHTML = options.map((option) => `
-        <option value="${escapeHtml(option.value)}">${escapeHtml(option.label)}</option>
-      `).join("");
+      if (selectedInventoryCategory !== "all" && !categories.includes(selectedInventoryCategory)) selectedInventoryCategory = "all";
+      const options = [{ label: "All", value: "all" }, ...categories.map(cat => ({ label: cat, value: cat }))];
+      inventoryCategoryFilter.innerHTML = options.map(opt => `<option value="${escapeHtml(opt.value)}">${escapeHtml(opt.label)}</option>`).join("");
       inventoryCategoryFilter.value = selectedInventoryCategory;
     }
 
     async function upsertProductMaster(product) {
       const response = await fetch(`${API_URL}/products`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(product)
       });
-
       const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to import product.");
-      }
-
+      if (!response.ok) throw new Error(data.error || "Failed to import product.");
       return data.product;
     }
 
     async function deleteProductMaster(productId) {
       try {
-        const response = await fetch(`${API_URL}/products/${productId}`, {
-          method: "DELETE"
-        });
+        const response = await fetch(`${API_URL}/products/${productId}`, { method: "DELETE" });
         const data = await response.json();
-
-        if (!response.ok) {
-          showStatusMessage(masterMessage, data.error || "Failed to delete product.", "error");
-          return;
-        }
-
+        if (!response.ok) { showStatusMessage(masterMessage, data.error || "Failed to delete product.", "error"); return; }
         await loadProductsFromDatabase();
         clearProductEditMode();
         showStatusMessage(masterMessage, "Product deleted.");
-      } catch (error) {
-        showStatusMessage(masterMessage, "Cannot connect to backend API.", "error");
-      }
+      } catch (error) { showStatusMessage(masterMessage, "Cannot connect to backend API.", "error"); }
     }
 
     function calculateCurrentQuantity(partNumber) {
-      return movements
-        .filter((movement) => movement.partNumber === partNumber)
-        .reduce((currentQuantity, movement) => {
-          if (movement.operationType === "Add Stock") {
-            return currentQuantity + movement.quantity;
-          }
-
-          if (movement.operationType === "Remove Stock") {
-            return currentQuantity - movement.quantity;
-          }
-
-          return movement.quantity;
-        }, 0);
+      return movements.filter(m => m.partNumber === partNumber).reduce((total, m) => {
+        if (m.operationType === "Add Stock") return total + m.quantity;
+        if (m.operationType === "Remove Stock") return total - m.quantity;
+        return total + m.quantity;
+      }, 0);
     }
 
-    function hasStockMovement(partNumber) {
-      return movements.some((movement) => movement.partNumber === partNumber);
-    }
+    function hasStockMovement(partNumber) { return movements.some(m => m.partNumber === partNumber); }
 
     function shouldShowInventoryProduct(product, quantity) {
-      if (!hasStockMovement(product.partNumber)) {
-        return false;
-      }
-
-      if (quantity > 0) {
-        return true;
-      }
-
+      if (!hasStockMovement(product.partNumber)) return false;
+      if (quantity > 0) return true;
       return currentUser?.role === "admin" && showZeroQuantityToggle.checked && quantity === 0;
     }
 
     function updateDashboard() {
-      const totalQuantity = productMasters.reduce((total, product) => {
-        return total + calculateCurrentQuantity(product.partNumber);
-      }, 0);
-
-      const zeroStockCount = productMasters.filter((product) => {
-        return calculateCurrentQuantity(product.partNumber) <= 0;
-      }).length;
-
+      const totalQuantity = productMasters.reduce((sum, p) => sum + calculateCurrentQuantity(p.partNumber), 0);
+      const zeroStockCount = productMasters.filter(p => calculateCurrentQuantity(p.partNumber) <= 0).length;
       document.getElementById("statProducts").textContent = productMasters.length;
       document.getElementById("statMovements").textContent = movements.length;
       document.getElementById("statQuantity").textContent = totalQuantity;
@@ -1721,47 +1680,26 @@
 
     function renderProductMaster() {
       const searchTerm = productMasterSearch.value.trim().toLowerCase();
-      const filteredProducts = searchTerm
-        ? productMasters.filter((product) => {
-            return [
-              product.partNumber,
-              product.description,
-              product.category
-            ].some((value) => String(value || "").toLowerCase().includes(searchTerm));
-          })
-        : productMasters;
-
-      const rows = filteredProducts.map((product) => `
+      const filtered = searchTerm ? productMasters.filter(p => [p.partNumber, p.description, p.category].some(val => String(val).toLowerCase().includes(searchTerm))) : productMasters;
+      const rows = filtered.map(p => `
         <tr>
-          <td>${escapeHtml(product.partNumber)}</td>
-          <td>${escapeHtml(product.description)}</td>
-          <td>${escapeHtml(product.category)}</td>
-          <td>
-            <span class="status-badge ${isInactiveProduct(product) ? "inactive" : "active"}">
-              ${escapeHtml(normalizeProductStatus(product.status))}
-            </span>
-          </td>
-          <td class="action-cell">
-            <button class="row-action" type="button" data-edit-product-id="${product.id}">Edit</button>
-            <button class="row-action danger" type="button" data-delete-product-id="${product.id}">Delete</button>
-          </td>
+          <td>${escapeHtml(p.partNumber)}</td>
+          <td>${escapeHtml(p.description)}</td>
+          <td>${escapeHtml(p.category)}</td>
+          <td><span class="status-badge ${isInactiveProduct(p) ? "inactive" : "active"}">${escapeHtml(normalizeProductStatus(p.status))}</span></td>
+          <td class="action-cell"><button class="row-action" data-edit-product-id="${p.id}">Edit</button><button class="row-action danger" data-delete-product-id="${p.id}">Delete</button></td>
         </tr>
-      `);
-
-      document.getElementById("productMasterRows").innerHTML = rows.length
-        ? rows.join("")
-        : `<tr><td class="empty-row" colspan="5">${productMasters.length ? "No matching product master records." : "No product master records yet."}</td></tr>`;
+      `).join("");
+      document.getElementById("productMasterRows").innerHTML = rows || `<tr><td class="empty-row" colspan="5">${productMasters.length ? "No matching product master records." : "No product master records yet."}</td></tr>`;
     }
 
     function setProductEditMode(product) {
       editingProductId = product.id;
       editingProductOriginalPartNumber = product.partNumber;
-
       document.getElementById("masterPartNumber").value = product.partNumber;
       document.getElementById("masterDescription").value = product.description;
       document.getElementById("masterCategory").value = product.category === "-" ? "" : product.category;
       document.getElementById("masterStatus").value = normalizeProductStatus(product.status);
-
       saveProductButton.textContent = "Update Product Master";
       clearProductButton.classList.add("hidden");
       cancelProductEditButton.classList.remove("hidden");
@@ -1780,152 +1718,76 @@
 
     function renderStockEntryHistory() {
       const searchTerm = stockHistorySearch.value.trim().toLowerCase();
-      const filteredMovements = searchTerm
-        ? movements.filter((movement) => {
-            const product = getProductByPartNumber(movement.partNumber);
-            return [
-              movement.stockCardNo,
-              movement.partNumber,
-              product?.description,
-              movement.location,
-              movement.stockStatusType,
-              movement.shipment,
-              movement.pocKeyIn,
-              movement.remark
-            ].some((value) => String(value || "").toLowerCase().includes(searchTerm));
-          })
-        : movements;
-
-      const rows = filteredMovements.map((movement) => {
-        const product = getProductByPartNumber(movement.partNumber);
-
+      const filtered = searchTerm ? movements.filter(m => {
+        const prod = getProductByPartNumber(m.partNumber);
+        return [m.stockCardNo, m.partNumber, prod?.description, m.location, m.stockStatusType, m.shipment, m.pocKeyIn, m.remark].some(v => String(v).toLowerCase().includes(searchTerm));
+      }) : movements;
+      const rows = filtered.map(m => {
+        const prod = getProductByPartNumber(m.partNumber);
         return `
           <tr>
-            <td>${escapeHtml(formatDateTime(movement.createdAt))}</td>
-            <td>${escapeHtml(movement.operationType)}</td>
-            <td>${escapeHtml(movement.stockCardNo || "-")}</td>
-            <td>${escapeHtml(movement.partNumber)}</td>
-            <td class="qty">${movement.quantity}</td>
-            <td>${escapeHtml(movement.location)}</td>
-            <td>${escapeHtml(product?.category || "-")}</td>
-            <td>${escapeHtml(movement.stockStatusType)}</td>
-            <td>${escapeHtml(movement.shipment || "-")}</td>
-            <td>${escapeHtml(movement.pocKeyIn || "-")}</td>
-            <td>${escapeHtml(movement.remark || "-")}</td>
+            <td>${escapeHtml(formatDateTime(m.createdAt))}</td>
+            <td>${escapeHtml(m.operationType)}</td>
+            <td>${escapeHtml(m.stockCardNo || "-")}</td>
+            <td>${escapeHtml(m.partNumber)}</td>
+            <td class="qty">${m.quantity}</td>
+            <td>${escapeHtml(m.location)}</td>
+            <td>${escapeHtml(prod?.category || "-")}</td>
+            <td>${escapeHtml(m.stockStatusType)}</td>
+            <td>${escapeHtml(m.shipment || "-")}</td>
+            <td>${escapeHtml(m.pocKeyIn || "-")}</td>
+            <td>${escapeHtml(m.remark || "-")}</td>
             <td class="action-cell">
-              <button class="row-action danger" type="button" data-delete-movement-id="${movement.id}">Delete</button>
+              <button class="row-action" data-edit-movement-id="${m.id}">Edit</button>
+              <button class="row-action danger" data-delete-movement-id="${m.id}">Delete</button>
             </td>
           </tr>
         `;
-      });
-
-      document.getElementById("stockHistoryRows").innerHTML = rows.length
-        ? rows.join("")
-        : `<tr><td class="empty-row" colspan="12">${movements.length ? "No matching stock entry history." : "No stock entry history yet."}</td></tr>`;
+      }).join("");
+      document.getElementById("stockHistoryRows").innerHTML = rows || `<tr><td class="empty-row" colspan="12">${movements.length ? "No matching stock entry history." : "No stock entry history yet."}</td></tr>`;
     }
 
-    function renderInventory() {
-      renderInventoryCategoryFilter();
-      loadInventoryView();
-    }
+    function renderInventory() { renderInventoryCategoryFilter(); loadInventoryView(); }
 
-    // ✅ UPDATED loadInventoryView with expandable movement details
     function loadInventoryView() {
       const searchValue = stockCardSearch.value.trim().toLowerCase();
-
-      const rows = productMasters.flatMap((product) => {
+      const rows = productMasters.flatMap(product => {
         const productMovements = movements.filter(m => m.partNumber === product.partNumber);
         const quantity = calculateCurrentQuantity(product.partNumber);
-        if (!shouldShowInventoryProduct(product, quantity)) {
-          return [];
-        }
-        if (selectedInventoryCategory !== "all" && product.category !== selectedInventoryCategory) {
-          return [];
-        }
-
-        const latestMovement = productMovements[productMovements.length - 1];
-        const stockStatusType = latestMovement?.stockStatusType || "-";
-        const stockCardNo = latestMovement?.stockCardNo || "-";
-        const pocKeyIn = latestMovement?.pocKeyIn || "-";
-        const remark = latestMovement?.remark || "No remark";
-
+        if (!shouldShowInventoryProduct(product, quantity)) return [];
+        if (selectedInventoryCategory !== "all" && product.category !== selectedInventoryCategory) return [];
+        const latest = productMovements[productMovements.length - 1];
+        const stockStatusType = latest?.stockStatusType || "-";
+        const stockCardNo = latest?.stockCardNo || "-";
+        const pocKeyIn = latest?.pocKeyIn || "-";
+        const remark = latest?.remark || "No remark";
         if (searchValue) {
           const searchable = [stockCardNo, product.partNumber, product.description, product.category, quantity, stockStatusType, pocKeyIn, remark];
-          if (!searchable.some(v => String(v || "").toLowerCase().includes(searchValue))) return [];
+          if (!searchable.some(v => String(v).toLowerCase().includes(searchValue))) return [];
         }
-
-        // Main product row (clickable)
-        const productRow = `
-          <tr class="product-row" data-partnumber="${escapeHtml(product.partNumber)}">
-            <td>${escapeHtml(product.partNumber)}</td>
-            <td>${escapeHtml(stockCardNo)}</td>
-            <td>${escapeHtml(product.description)}</td>
-            <td>${escapeHtml(product.category)}</td>
-            <td class="qty">${quantity}</td>
-            <td>${escapeHtml(stockStatusType)}</td>
-            <td>${escapeHtml(pocKeyIn)}</td>
-            <td>${escapeHtml(remark)}</td>
-          </tr>
-        `;
-
-        // Detail row (hidden by default)
+        const productRow = `<tr class="product-row" data-partnumber="${escapeHtml(product.partNumber)}">
+          <td>${escapeHtml(product.partNumber)}</td>
+          <td>${escapeHtml(stockCardNo)}</td>
+          <td>${escapeHtml(product.description)}</td>
+          <td>${escapeHtml(product.category)}</td>
+          <td class="qty">${quantity}</td>
+          <td>${escapeHtml(stockStatusType)}</td>
+          <td>${escapeHtml(pocKeyIn)}</td>
+          <td>${escapeHtml(remark)}</td>
+        </tr>`;
         let detailRow = '';
-        if (productMovements.length > 0) {
-          detailRow = `
-            <tr class="movement-detail" data-partnumber="${escapeHtml(product.partNumber)}" style="display:none;">
-              <td colspan="8" style="padding:0;">
-                <table style="width:100%; margin:8px 0; border-left:3px solid #1d6f9f;">
-                  <thead>
-                    <tr>
-                      <th>Movement ID</th>
-                      <th>Operation</th>
-                      <th>Stock Card No.</th>
-                      <th>Qty</th>
-                      <th>Location</th>
-                      <th>Status</th>
-                      <th>Shipment</th>
-                      <th>POC</th>
-                      <th>Remark</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    ${productMovements.map(m => `
-                      <tr>
-                        <td>${m.id}</td>
-                        <td>${escapeHtml(m.operationType)}</td>
-                        <td>${escapeHtml(m.stockCardNo || "-")}</td>
-                        <td class="qty">${m.quantity}</td>
-                        <td>${escapeHtml(m.location)}</td>
-                        <td>${escapeHtml(m.stockStatusType)}</td>
-                        <td>${escapeHtml(m.shipment || "-")}</td>
-                        <td>${escapeHtml(m.pocKeyIn || "-")}</td>
-                        <td>${escapeHtml(m.remark || "-")}</td>
-                      </tr>
-                    `).join('')}
-                  </tbody>
-                </table>
-              </td>
-            </tr>
-          `;
+        if (productMovements.length) {
+          detailRow = `<tr class="movement-detail" data-partnumber="${escapeHtml(product.partNumber)}" style="display:none;"><td colspan="8" style="padding:0;"><table style="width:100%; margin:8px 0; border-left:3px solid #1d6f9f;"><thead><tr><th>Movement ID</th><th>Operation</th><th>Stock Card No.</th><th>Qty</th><th>Location</th><th>Status</th><th>Shipment</th><th>POC</th><th>Remark</th></tr></thead><tbody>${productMovements.map(m => `<tr><td>${m.id}</td><td>${escapeHtml(m.operationType)}</td><td>${escapeHtml(m.stockCardNo || "-")}</td><td class="qty">${m.quantity}</td><td>${escapeHtml(m.location)}</td><td>${escapeHtml(m.stockStatusType)}</td><td>${escapeHtml(m.shipment || "-")}</td><td>${escapeHtml(m.pocKeyIn || "-")}</td><td>${escapeHtml(m.remark || "-")}</td></tr>`).join('')}</tbody></table></td></tr>`;
         }
-
         return [productRow, detailRow];
       });
-
-      document.getElementById("inventoryRows").innerHTML = rows.length
-        ? rows.join("")
-        : '<tr><td class="empty-row" colspan="8">No inventory records yet.</td></tr>';
-
+      document.getElementById("inventoryRows").innerHTML = rows.length ? rows.join("") : '<tr><td class="empty-row" colspan="8">No inventory records yet.</td></tr>';
       updateDashboard();
-
-      // Attach click handlers to toggle detail rows
       document.querySelectorAll("#inventoryRows .product-row").forEach(row => {
         row.addEventListener("click", function() {
-          const partNumber = this.dataset.partnumber;
-          const detailRow = document.querySelector(`#inventoryRows .movement-detail[data-partnumber="${partNumber}"]`);
-          if (detailRow) {
-            detailRow.style.display = detailRow.style.display === "none" ? "table-row" : "none";
-          }
+          const part = this.dataset.partnumber;
+          const detail = document.querySelector(`#inventoryRows .movement-detail[data-partnumber="${part}"]`);
+          if (detail) detail.style.display = detail.style.display === "none" ? "table-row" : "none";
         });
       });
     }
@@ -1939,11 +1801,7 @@
 
     function updateLookup() {
       const partNumber = document.getElementById("entryPartNumber").value;
-      if (!partNumber.trim()) {
-        clearLookup();
-        return null;
-      }
-
+      if (!partNumber.trim()) { clearLookup(); return null; }
       const product = findProduct(partNumber);
       if (!product) {
         document.getElementById("lookupDescription").textContent = "Not found";
@@ -1952,7 +1810,6 @@
         hideMessage(stockMessage);
         return null;
       }
-
       if (isInactiveProduct(product)) {
         document.getElementById("lookupDescription").textContent = "Inactive product";
         document.getElementById("lookupCategory").textContent = product.category;
@@ -1960,7 +1817,6 @@
         hideMessage(stockMessage);
         return null;
       }
-
       document.getElementById("lookupDescription").textContent = product.description;
       document.getElementById("lookupCategory").textContent = product.category;
       hideMessage(lookupMessage);
@@ -1968,43 +1824,94 @@
     }
 
     function updateAdjustmentFields() {
-      const operationType = document.getElementById("operationType").value;
-      const stockCardNo = document.getElementById("stockCardNo");
-      const adjustmentReason = document.getElementById("adjustmentReason");
-      const adjustmentReasonField = document.getElementById("adjustmentReasonField");
-      const isAdjustment = operationType === "Adjustment";
-
-      stockCardNo.required = !isAdjustment;
-      stockCardNo.placeholder = isAdjustment ? "Optional for adjustment" : "Example: SC-2026-001";
-      adjustmentReason.required = isAdjustment;
-      adjustmentReason.disabled = !isAdjustment;
-      adjustmentReasonField.classList.toggle("hidden", !isAdjustment);
-
-      if (!isAdjustment) {
-        adjustmentReason.value = "";
-      }
+      const op = document.getElementById("operationType").value;
+      const isAdj = op === "Adjustment";
+      const scn = document.getElementById("stockCardNo");
+      const adjReason = document.getElementById("adjustmentReason");
+      const adjField = document.getElementById("adjustmentReasonField");
+      scn.required = !isAdj;
+      scn.placeholder = isAdj ? "Optional for adjustment" : "Example: SC-2026-001";
+      adjReason.required = isAdj;
+      adjReason.disabled = !isAdj;
+      adjField.classList.toggle("hidden", !isAdj);
+      if (!isAdj) adjReason.value = "";
     }
 
     // Delete stock movement
     async function deleteStockMovement(movementId) {
       try {
-        const response = await fetch(`${API_URL}/stock-movements/${movementId}`, {
-          method: 'DELETE'
-        });
+        const response = await fetch(`${API_URL}/stock-movements/${movementId}`, { method: 'DELETE' });
         const data = await response.json();
-
-        if (!response.ok) {
-          showMessage(stockMessage, data.error || 'Failed to delete stock movement.');
-          return;
-        }
-
+        if (!response.ok) { showMessage(stockMessage, data.error || 'Failed to delete stock movement.'); return; }
         await loadStockMovementsFromDatabase();
         renderInventory();
         showMessage(stockMessage, 'Stock movement deleted successfully.');
-      } catch (error) {
-        showMessage(stockMessage, 'Cannot connect to backend API.');
+      } catch (error) { showMessage(stockMessage, 'Cannot connect to backend API.'); }
+    }
+
+    // Edit stock movement modal
+    async function openEditStockModal(movementId) {
+      try {
+        const response = await fetch(`${API_URL}/stock-movements`);
+        if (!response.ok) throw new Error('Failed to load movements');
+        const allMovements = await response.json();
+        const movement = allMovements.find(m => m.id === movementId);
+        if (!movement) throw new Error('Movement not found');
+        document.getElementById('editStockId').value = movement.id;
+        document.getElementById('editOperationType').value = movement.operation_type;
+        document.getElementById('editStockCardNo').value = movement.stock_card_no || '';
+        document.getElementById('editPartNumber').value = movement.part_number;
+        document.getElementById('editQuantity').value = movement.quantity;
+        document.getElementById('editLocation').value = movement.location;
+        document.getElementById('editStockStatusType').value = movement.stock_status_type;
+        document.getElementById('editShipment').value = movement.shipment || '';
+        document.getElementById('editPocKeyIn').value = movement.poc_key_in;
+        document.getElementById('editRemark').value = movement.remark || '';
+        hideMessage(editStockMessage);
+        document.getElementById('editStockModal').classList.remove('hidden');
+      } catch (err) {
+        showMessage(editStockMessage, err.message, true);
       }
     }
+
+    document.getElementById('cancelEditStockBtn').addEventListener('click', function() {
+      document.getElementById('editStockModal').classList.add('hidden');
+      hideMessage(editStockMessage);
+    });
+
+    const editStockFormElem = document.getElementById('editStockForm');
+    const editStockMessageElem = document.getElementById('editStockMessage');
+    editStockFormElem.addEventListener('submit', async function(event) {
+      event.preventDefault();
+      const id = document.getElementById('editStockId').value;
+      const payload = {
+        operation_type: document.getElementById('editOperationType').value,
+        stock_card_no: document.getElementById('editStockCardNo').value,
+        part_number: document.getElementById('editPartNumber').value,
+        quantity: Number(document.getElementById('editQuantity').value),
+        location: document.getElementById('editLocation').value,
+        stock_status_type: document.getElementById('editStockStatusType').value,
+        shipment: document.getElementById('editShipment').value,
+        poc_key_in: document.getElementById('editPocKeyIn').value,
+        remark: document.getElementById('editRemark').value
+      };
+      try {
+        const response = await fetch(`${API_URL}/stock-movements/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Update failed');
+        showMessage(editStockMessageElem, 'Stock movement updated successfully.');
+        setTimeout(() => {
+          document.getElementById('editStockModal').classList.add('hidden');
+          loadStockMovementsFromDatabase();
+        }, 1000);
+      } catch (err) {
+        showMessage(editStockMessageElem, err.message, true);
+      }
+    });
 
     function mapStockMovement(item) {
       return {
@@ -2026,14 +1933,9 @@
     async function loadStockMovementsFromDatabase() {
       try {
         const response = await fetch(`${API_URL}/stock-movements`);
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const stockMovements = await response.json();
-        if (!Array.isArray(stockMovements)) {
-          throw new Error('Invalid response format – expected an array');
-        }
-
+        if (!Array.isArray(stockMovements)) throw new Error('Invalid response format – expected an array');
         movements.splice(0, movements.length, ...stockMovements.map(mapStockMovement));
         renderInventory();
         renderStockEntryHistory();
@@ -2053,18 +1955,14 @@
           throw new Error(errorData.error || `HTTP ${response.status}`);
         }
         const products = await response.json();
-        if (!Array.isArray(products)) {
-          throw new Error('Invalid response format – expected an array');
-        }
-
-        productMasters = products.map((item) => ({
+        if (!Array.isArray(products)) throw new Error('Invalid response format – expected an array');
+        productMasters = products.map(item => ({
           id: item.id,
           partNumber: item.part_number,
           description: item.description,
           category: item.category || "-",
           status: normalizeProductStatus(item.status)
         }));
-
         renderProductMaster();
         await loadStockMovementsFromDatabase();
       } catch (error) {
@@ -2074,335 +1972,168 @@
       }
     }
 
-    // Event listeners for inventory
-    document.querySelectorAll(".nav-button").forEach((button) => {
-      button.addEventListener("click", function() {
-        switchPage(this.dataset.page);
-      });
-    });
+    // Event listeners
+    document.querySelectorAll(".nav-button").forEach(btn => btn.addEventListener("click", function() { switchPage(this.dataset.page); }));
 
     document.getElementById("productMasterRows").addEventListener("click", function(event) {
-      const editButton = event.target.closest("[data-edit-product-id]");
-      const deleteButton = event.target.closest("[data-delete-product-id]");
-
-      if (editButton) {
-        const productId = Number(editButton.dataset.editProductId);
-        const product = productMasters.find((item) => item.id === productId);
-        if (product) {
-          setProductEditMode(product);
-        }
+      const edit = event.target.closest("[data-edit-product-id]");
+      if (edit) {
+        const pid = Number(edit.dataset.editProductId);
+        const prod = productMasters.find(p => p.id === pid);
+        if (prod) setProductEditMode(prod);
         return;
       }
-
-      if (deleteButton) {
-        const productId = Number(deleteButton.dataset.deleteProductId);
-        const product = productMasters.find((item) => item.id === productId);
-        if (!product) {
-          return;
-        }
-
-        if (!confirm(`Delete product ${product.partNumber}?`)) {
-          return;
-        }
-
-        deleteProductMaster(productId);
+      const del = event.target.closest("[data-delete-product-id]");
+      if (del) {
+        const pid = Number(del.dataset.deleteProductId);
+        const prod = productMasters.find(p => p.id === pid);
+        if (prod && confirm(`Delete product ${prod.partNumber}?`)) deleteProductMaster(pid);
       }
     });
 
     document.getElementById("stockHistoryRows").addEventListener("click", function(event) {
-      const deleteButton = event.target.closest("[data-delete-movement-id]");
-      if (deleteButton) {
-        const movementId = Number(deleteButton.dataset.deleteMovementId);
-        if (!confirm('Delete this stock movement? This action cannot be undone.')) {
-          return;
-        }
-        deleteStockMovement(movementId);
-      }
-    });
-
-    cancelProductEditButton.addEventListener("click", function() {
-      clearProductEditMode();
-      hideMessage(masterMessage);
-    });
-
-    importProductCsvButton.addEventListener("click", function() {
-      productCsvInput.click();
-    });
-
-    productCsvInput.addEventListener("change", async function() {
-      const file = productCsvInput.files[0];
-      if (!file) {
+      const editBtn = event.target.closest("[data-edit-movement-id]");
+      if (editBtn) {
+        const mid = Number(editBtn.dataset.editMovementId);
+        openEditStockModal(mid);
         return;
       }
+      const delBtn = event.target.closest("[data-delete-movement-id]");
+      if (delBtn) {
+        const mid = Number(delBtn.dataset.deleteMovementId);
+        if (confirm('Delete this stock movement? This action cannot be undone.')) deleteStockMovement(mid);
+      }
+    });
 
-      const summary = {
-        imported: 0,
-        updated: 0,
-        skipped: 0
-      };
-
+    cancelProductEditButton.addEventListener("click", () => { clearProductEditMode(); hideMessage(masterMessage); });
+    importProductCsvButton.addEventListener("click", () => productCsvInput.click());
+    productCsvInput.addEventListener("change", async function() {
+      const file = productCsvInput.files[0];
+      if (!file) return;
+      const summary = { imported: 0, updated: 0, skipped: 0 };
       try {
         const csvText = await file.text();
         const rows = parseCsv(csvText);
-        const headerRow = rows.shift() || [];
-        const headers = headerRow.map(normalizeHeader);
-        const partNumberIndex = headers.indexOf("part number");
-        const descriptionIndex = headers.indexOf("product description");
-        const categoryIndex = headers.indexOf("category");
-        const statusIndex = headers.indexOf("status");
-
-        if (partNumberIndex === -1 || descriptionIndex === -1 || categoryIndex === -1) {
+        const headers = rows.shift().map(normalizeHeader);
+        const pnIdx = headers.indexOf("part number");
+        const descIdx = headers.indexOf("product description");
+        const catIdx = headers.indexOf("category");
+        const statIdx = headers.indexOf("status");
+        if (pnIdx === -1 || descIdx === -1 || catIdx === -1) {
           showStatusMessage(masterMessage, "CSV must include Part Number, Product Description, and Category columns.", "error");
           return;
         }
-
-        const knownPartNumbers = new Set(productMasters.map((product) => product.partNumber));
-
+        const known = new Set(productMasters.map(p => p.partNumber));
         for (const row of rows) {
-          const isEmptyRow = row.every((cell) => !cell.trim());
-          if (isEmptyRow) {
-            summary.skipped += 1;
-            console.log("Skipped row: Empty row", row);
-            continue;
-          }
-
-          const partNumber = normalizePartNumber(row[partNumberIndex] || "");
-          const description = (row[descriptionIndex] || "").trim();
-          const category = (row[categoryIndex] || "").trim();
-          const status = statusIndex === -1 ? "Active" : normalizeProductStatus((row[statusIndex] || "").trim());
-          if (!partNumber || !description || !category) {
-            summary.skipped += 1;
-            console.log("Skipped row: Missing Part Number / Description / Category", row);
-            continue;
-          }
-
-          await upsertProductMaster({
-            part_number: partNumber,
-            description,
-            category,
-            status
-          });
-
-          if (knownPartNumbers.has(partNumber)) {
-            summary.updated += 1;
-          } else {
-            summary.imported += 1;
-            knownPartNumbers.add(partNumber);
-          }
+          if (row.every(cell => !cell.trim())) { summary.skipped++; continue; }
+          const pn = normalizePartNumber(row[pnIdx] || "");
+          const desc = (row[descIdx] || "").trim();
+          const cat = (row[catIdx] || "").trim();
+          const stat = statIdx === -1 ? "Active" : normalizeProductStatus((row[statIdx] || "").trim());
+          if (!pn || !desc || !cat) { summary.skipped++; continue; }
+          await upsertProductMaster({ part_number: pn, description: desc, category: cat, status: stat });
+          if (known.has(pn)) summary.updated++; else { summary.imported++; known.add(pn); }
         }
-
         await loadProductsFromDatabase();
         updateLookup();
         clearProductEditMode();
-        showStatusMessage(
-          masterMessage,
-          `Import complete. Total imported: ${summary.imported}. Total updated: ${summary.updated}. Total skipped: ${summary.skipped}.`
-        );
-      } catch (error) {
-        showStatusMessage(masterMessage, error.message || "Cannot import CSV file.", "error");
-      } finally {
-        productCsvInput.value = "";
-      }
+        showStatusMessage(masterMessage, `Import complete. Imported: ${summary.imported}, Updated: ${summary.updated}, Skipped: ${summary.skipped}.`);
+      } catch (err) { showStatusMessage(masterMessage, err.message || "Cannot import CSV file.", "error"); } finally { productCsvInput.value = ""; }
     });
 
-    exportProductCsvButton.addEventListener("click", function() {
-      const rows = [
-        ["Part Number", "Product Description", "Category", "Status"],
-        ...productMasters.map((product) => [
-          product.partNumber,
-          product.description,
-          product.category === "-" ? "" : product.category,
-          normalizeProductStatus(product.status)
-        ])
-      ];
-
+    exportProductCsvButton.addEventListener("click", () => {
+      const rows = [["Part Number", "Product Description", "Category", "Status"], ...productMasters.map(p => [p.partNumber, p.description, p.category === "-" ? "" : p.category, normalizeProductStatus(p.status)])];
       downloadCsv("datacom-product-master.csv", rows);
       showStatusMessage(masterMessage, `Exported ${productMasters.length} product master records.`);
     });
 
-    exportStockHistoryCsvButton.addEventListener("click", function() {
-      const rows = [
-        ["Operation Type", "Stock Card No.", "Part Number", "Quantity", "Location", "Category", "Stock Status Type", "Shipment", "POC Key In", "Remark"],
-        ...movements.map((movement) => {
-          const product = getProductByPartNumber(movement.partNumber);
-
-          return [
-            movement.operationType,
-            movement.stockCardNo,
-            movement.partNumber,
-            movement.quantity,
-            movement.location,
-            product?.category || "",
-            movement.stockStatusType,
-            movement.shipment,
-            movement.pocKeyIn,
-            movement.remark
-          ];
-        })
-      ];
-
+    exportStockHistoryCsvButton.addEventListener("click", () => {
+      const rows = [["Operation Type","Stock Card No.","Part Number","Quantity","Location","Category","Stock Status Type","Shipment","POC Key In","Remark"], ...movements.map(m => {
+        const prod = getProductByPartNumber(m.partNumber);
+        return [m.operationType, m.stockCardNo, m.partNumber, m.quantity, m.location, prod?.category || "", m.stockStatusType, m.shipment, m.pocKeyIn, m.remark];
+      })];
       downloadCsv("datacom-stock-entry-history.csv", rows);
       showMessage(stockMessage, `Exported ${movements.length} stock entry history records.`);
     });
 
-    importStockHistoryCsvButton.addEventListener("click", function() {
-      stockHistoryCsvInput.click();
-    });
-
+    importStockHistoryCsvButton.addEventListener("click", () => stockHistoryCsvInput.click());
     stockHistoryCsvInput.addEventListener("change", async function() {
       const file = stockHistoryCsvInput.files[0];
-      if (!file) {
-        return;
-      }
-
-      const summary = {
-        imported: 0,
-        skipped: 0
-      };
-
+      if (!file) return;
+      const summary = { imported: 0, skipped: 0 };
       try {
         const csvText = await file.text();
         const rows = parseCsv(csvText);
-        const headerRow = rows.shift() || [];
-        const headers = headerRow.map(normalizeHeader);
-        const operationTypeIndex = headers.indexOf("operation type");
-        const stockCardNoIndex = headers.indexOf("stock card no.");
-        const partNumberIndex = headers.indexOf("part number");
-        const quantityIndex = headers.indexOf("quantity");
-        const locationIndex = headers.indexOf("location");
-        const categoryIndex = headers.indexOf("category");
-        const stockStatusTypeIndex = headers.indexOf("stock status type");
-        const shipmentIndex = headers.indexOf("shipment");
-        const pocKeyInIndex = headers.indexOf("poc key in");
-        const remarkIndex = headers.indexOf("remark");
-
-        if (
-          operationTypeIndex === -1 ||
-          stockCardNoIndex === -1 ||
-          partNumberIndex === -1 ||
-          quantityIndex === -1 ||
-          locationIndex === -1 ||
-          categoryIndex === -1 ||
-          stockStatusTypeIndex === -1 ||
-          shipmentIndex === -1 ||
-          pocKeyInIndex === -1 ||
-          remarkIndex === -1
-        ) {
-          showMessage(stockMessage, "CSV must include Operation Type, Stock Card No., Part Number, Quantity, Location, Category, Stock Status Type, Shipment, POC Key In, and Remark columns.");
+        const headers = rows.shift().map(normalizeHeader);
+        const opIdx = headers.indexOf("operation type");
+        const scnIdx = headers.indexOf("stock card no.");
+        const pnIdx = headers.indexOf("part number");
+        const qtyIdx = headers.indexOf("quantity");
+        const locIdx = headers.indexOf("location");
+        const catIdx = headers.indexOf("category");
+        const sstIdx = headers.indexOf("stock status type");
+        const shipIdx = headers.indexOf("shipment");
+        const pocIdx = headers.indexOf("poc key in");
+        const remIdx = headers.indexOf("remark");
+        if ([opIdx, scnIdx, pnIdx, qtyIdx, locIdx, catIdx, sstIdx, shipIdx, pocIdx, remIdx].some(i => i === -1)) {
+          showMessage(stockMessage, "CSV must include all required columns.");
           return;
         }
-
         for (const row of rows) {
-          if (row.every((cell) => !cell.trim())) {
-            summary.skipped += 1;
-            continue;
-          }
-
-          const partNumber = normalizePartNumber(row[partNumberIndex] || "");
-          const product = findProduct(partNumber);
-
-          if (!product) {
-            summary.skipped += 1;
-            continue;
-          }
-
+          if (row.every(cell => !cell.trim())) { summary.skipped++; continue; }
+          const pn = normalizePartNumber(row[pnIdx] || "");
+          const prod = findProduct(pn);
+          if (!prod) { summary.skipped++; continue; }
           const payload = {
-            operation_type: (row[operationTypeIndex] || "").trim(),
-            stock_card_no: (row[stockCardNoIndex] || "").trim(),
+            operation_type: row[opIdx]?.trim() || "",
+            stock_card_no: row[scnIdx]?.trim() || "",
             adjustment_reason: null,
-            part_number: partNumber,
-            quantity: Number(row[quantityIndex]) || 0,
-            location: (row[locationIndex] || "").trim(),
-            stock_status_type: (row[stockStatusTypeIndex] || "").trim(),
-            shipment: (row[shipmentIndex] || "").trim(),
-            poc_key_in: (row[pocKeyInIndex] || "").trim(),
-            remark: (row[remarkIndex] || "").trim()
+            part_number: pn,
+            quantity: Number(row[qtyIdx]) || 0,
+            location: row[locIdx]?.trim() || "",
+            stock_status_type: row[sstIdx]?.trim() || "",
+            shipment: row[shipIdx]?.trim() || "",
+            poc_key_in: row[pocIdx]?.trim() || "",
+            remark: row[remIdx]?.trim() || ""
           };
-
-          const response = await fetch(`${API_URL}/stock-movements`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify(payload)
-          });
-
-          if (!response.ok) {
-            summary.skipped += 1;
-            continue;
-          }
-
-          summary.imported += 1;
+          const response = await fetch(`${API_URL}/stock-movements`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+          if (!response.ok) { summary.skipped++; continue; }
+          summary.imported++;
         }
-
         await loadStockMovementsFromDatabase();
         updateLookup();
-        showMessage(stockMessage, `Import complete. Total imported: ${summary.imported}. Total skipped: ${summary.skipped}.`);
-      } catch (error) {
-        showMessage(stockMessage, "Cannot import CSV file.");
-      } finally {
-        stockHistoryCsvInput.value = "";
-      }
+        showMessage(stockMessage, `Import complete. Imported: ${summary.imported}, Skipped: ${summary.skipped}.`);
+      } catch (err) { showMessage(stockMessage, "Cannot import CSV file."); } finally { stockHistoryCsvInput.value = ""; }
     });
 
     productMasterForm.addEventListener("submit", async function(event) {
       event.preventDefault();
-
       const product = {
         part_number: normalizePartNumber(document.getElementById("masterPartNumber").value),
         description: document.getElementById("masterDescription").value.trim(),
         category: document.getElementById("masterCategory").value,
         status: document.getElementById("masterStatus").value
       };
-
       try {
         const isEditing = editingProductId !== null;
-        const response = await fetch(isEditing ? `${API_URL}/products/${editingProductId}` : `${API_URL}/products`, {
-          method: isEditing ? "PUT" : "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(product)
-        });
-
+        const url = isEditing ? `${API_URL}/products/${editingProductId}` : `${API_URL}/products`;
+        const method = isEditing ? "PUT" : "POST";
+        const response = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(product) });
         const data = await response.json();
-
-        if (!response.ok) {
-          showStatusMessage(masterMessage, data.error || "Failed to save product.", "error");
-          return;
-        }
-
+        if (!response.ok) throw new Error(data.error || "Failed to save product.");
         if (isEditing) {
-          movements.forEach((movement) => {
-            if (movement.partNumber === editingProductOriginalPartNumber) {
-              movement.partNumber = product.part_number;
-            }
-          });
-
-          const entryPartNumber = document.getElementById("entryPartNumber");
-          if (normalizePartNumber(entryPartNumber.value) === editingProductOriginalPartNumber) {
-            entryPartNumber.value = product.part_number;
-          }
+          movements.forEach(m => { if (m.partNumber === editingProductOriginalPartNumber) m.partNumber = product.part_number; });
+          const entryPN = document.getElementById("entryPartNumber");
+          if (normalizePartNumber(entryPN.value) === editingProductOriginalPartNumber) entryPN.value = product.part_number;
         }
-
-        showStatusMessage(masterMessage, isEditing ? "Product master updated." : "Product master saved to PostgreSQL.");
-
+        showStatusMessage(masterMessage, isEditing ? "Product master updated." : "Product master saved.");
         await loadProductsFromDatabase();
         updateLookup();
         clearProductEditMode();
-
-      } catch (error) {
-        showStatusMessage(masterMessage, "Cannot connect to backend API.", "error");
-      }
+      } catch (error) { showStatusMessage(masterMessage, "Cannot connect to backend API.", "error"); }
     });
 
-    productMasterForm.addEventListener("reset", function(event) {
-      if (editingProductId !== null) {
-        event.preventDefault();
-        clearProductEditMode();
-        hideMessage(masterMessage);
-      }
-    });
+    productMasterForm.addEventListener("reset", function(event) { if (editingProductId !== null) { event.preventDefault(); clearProductEditMode(); hideMessage(masterMessage); } });
 
     document.getElementById("entryPartNumber").addEventListener("input", updateLookup);
     document.getElementById("entryPartNumber").addEventListener("change", updateLookup);
@@ -2410,10 +2141,7 @@
     if (showZeroQuantityToggle) showZeroQuantityToggle.addEventListener("change", renderInventory);
     productMasterSearch.addEventListener("input", renderProductMaster);
     productMasterSearch.addEventListener("change", renderProductMaster);
-    inventoryCategoryFilter.addEventListener("change", function() {
-      selectedInventoryCategory = inventoryCategoryFilter.value;
-      renderInventory();
-    });
+    inventoryCategoryFilter.addEventListener("change", function() { selectedInventoryCategory = inventoryCategoryFilter.value; renderInventory(); });
     stockCardSearch.addEventListener("input", loadInventoryView);
     stockCardSearch.addEventListener("change", loadInventoryView);
     stockHistorySearch.addEventListener("input", renderStockEntryHistory);
@@ -2421,27 +2149,16 @@
 
     stockEntryForm.addEventListener("submit", async function(event) {
       event.preventDefault();
-
       const product = updateLookup();
-      if (!product) {
-        showMessage(lookupMessage, "Part number not found. Please create product master first.");
-        hideMessage(stockMessage);
-        return;
-      }
-
+      if (!product) { showMessage(lookupMessage, "Part number not found. Please create product master first."); hideMessage(stockMessage); return; }
       try {
         const response = await fetch(`${API_URL}/stock-movements`, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             operation_type: document.getElementById("operationType").value,
             stock_card_no: document.getElementById("stockCardNo").value.trim(),
-            adjustment_reason:
-              document.getElementById("operationType").value === "Adjustment"
-                ? document.getElementById("adjustmentReason").value
-                : null,
+            adjustment_reason: document.getElementById("operationType").value === "Adjustment" ? document.getElementById("adjustmentReason").value : null,
             part_number: product.partNumber,
             quantity: Number(document.getElementById("quantity").value) || 0,
             location: document.getElementById("location").value.trim(),
@@ -2451,32 +2168,18 @@
             remark: document.getElementById("entryRemark").value.trim()
           })
         });
-
         const data = await response.json();
-
-        if (!response.ok) {
-          showMessage(stockMessage, data.error || "Failed to save stock movement.");
-          return;
-        }
-
+        if (!response.ok) throw new Error(data.error || "Failed to save stock movement.");
         movements.push(mapStockMovement(data.movement));
         stockEntryForm.reset();
         clearLookup();
-
         renderInventory();
         renderStockEntryHistory();
-
         showMessage(stockMessage, "Stock entry saved to PostgreSQL.");
-
-      } catch (error) {
-        showMessage(stockMessage, "Cannot connect to backend API.");
-      }
+      } catch (error) { showMessage(stockMessage, "Cannot connect to backend API."); }
     });
 
-    stockEntryForm.addEventListener("reset", function() {
-      clearLookup();
-      setTimeout(updateAdjustmentFields, 0);
-    });
+    stockEntryForm.addEventListener("reset", function() { clearLookup(); setTimeout(updateAdjustmentFields, 0); });
 
     loadProductsFromDatabase();
     updateAdjustmentFields();
