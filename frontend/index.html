@@ -631,7 +631,7 @@
         <div class="grid">
           <div class="field">
             <label for="editOperationType">Operation Type</label>
-            <select id="editOperationType" required>
+            <select id="editOperationType" required disabled>
               <option value="">Select</option>
               <option value="Add Stock">Add Stock</option>
               <option value="Remove Stock">Remove Stock</option>
@@ -640,19 +640,19 @@
           </div>
           <div class="field">
             <label for="editStockCardNo">Stock Card No.</label>
-            <input id="editStockCardNo" type="text" required>
+            <input id="editStockCardNo" type="text" required readonly>
           </div>
           <div class="field">
             <label for="editPartNumber">Part Number</label>
-            <input id="editPartNumber" type="text" required>
+            <input id="editPartNumber" type="text" required >
           </div>
           <div class="field">
             <label for="editQuantity">Quantity</label>
-            <input id="editQuantity" type="number" min="0" required>
+            <input id="editQuantity" type="number" min="0" required readonly>
           </div>
           <div class="field">
             <label for="editLocation">Location</label>
-            <input id="editLocation" type="text" required>
+            <input id="editLocation" type="text" required readonly>
           </div>
           <div class="field">
             <label for="editStockStatusType">Stock Status Type</label>
@@ -670,11 +670,11 @@
           </div>
           <div class="field">
             <label for="editShipment">Shipment</label>
-            <input id="editShipment" type="text">
+            <input id="editShipment" type="text" readonly>
           </div>
           <div class="field">
             <label for="editPocKeyIn">POC Key In</label>
-            <select id="editPocKeyIn" required>
+            <select id="editPocKeyIn" required disabled>
               <option value="">Select</option>
               <option value="June">June</option>
               <option value="Devi">Devi</option>
