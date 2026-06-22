@@ -1222,6 +1222,7 @@
   <script>
     // ---------- GLOBAL VARS ----------
     const API_URL = "https://desktop-19n0dfj.taildafd1a.ts.net:8443/api";
+    const SESSION_STORAGE_KEY = "datacomInventoryUser";
     let productMasters = [];
     const movements = [];
     let selectedInventoryCategory = "all";
@@ -1321,6 +1322,48 @@
       return productMasters.find((product) => product.partNumber === normalized);
     }
 
+    function normalizeSessionUser(user) {
+      const allowedPages = user?.allowedPages || user?.allowed_pages || [];
+      if (!user?.username || !user?.role || !Array.isArray(allowedPages) || allowedPages.length === 0) return null;
+      return {
+        id: user.id,
+        username: user.username,
+        role: user.role,
+        allowedPages
+      };
+    }
+
+    function persistSession(user) {
+      localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(user));
+    }
+
+    function clearSession() {
+      localStorage.removeItem(SESSION_STORAGE_KEY);
+    }
+
+    function showAuthenticatedApp(user) {
+      currentUser = normalizeSessionUser(user);
+      if (!currentUser) {
+        clearSession();
+        return false;
+      }
+      loginScreen.classList.add("hidden");
+      appHeader.classList.remove("hidden");
+      appMain.classList.remove("hidden");
+      hideMessage(loginMessage);
+      applyRolePermissions();
+      return true;
+    }
+
+    function restoreSavedSession() {
+      try {
+        const savedUser = JSON.parse(localStorage.getItem(SESSION_STORAGE_KEY) || "null");
+        if (savedUser) showAuthenticatedApp(savedUser);
+      } catch (error) {
+        clearSession();
+      }
+    }
+
     function switchPage(pageId) {
       if (!currentUser || !currentUser.allowedPages.includes(pageId)) return;
       document.querySelectorAll(".page").forEach(page => page.classList.toggle("is-active", page.id === pageId));
@@ -1358,12 +1401,7 @@
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || "Login failed");
 
-        currentUser = data;
-        loginScreen.classList.add("hidden");
-        appHeader.classList.remove("hidden");
-        appMain.classList.remove("hidden");
-        hideMessage(loginMessage);
-        applyRolePermissions();
+        if (showAuthenticatedApp(data)) persistSession(currentUser);
       } catch (error) {
         showMessage(loginMessage, error.message, true);
       }
@@ -1371,6 +1409,7 @@
 
     document.getElementById("logoutButton").addEventListener("click", function() {
       currentUser = null;
+      clearSession();
       loginForm.reset();
       document.querySelector(".nav").classList.remove("is-visible");
       userArea.classList.remove("is-visible");
@@ -1930,6 +1969,27 @@
       };
     }
 
+    function mapProduct(item) {
+      return {
+        id: item.id,
+        partNumber: item.part_number,
+        description: item.description,
+        category: item.category || "-",
+        status: normalizeProductStatus(item.status)
+      };
+    }
+
+    function upsertLocalProduct(product) {
+      const mappedProduct = mapProduct(product);
+      const index = productMasters.findIndex(p => p.id === mappedProduct.id || p.partNumber === mappedProduct.partNumber);
+      if (index === -1) productMasters.unshift(mappedProduct);
+      else productMasters.splice(index, 1, mappedProduct);
+      renderProductMaster();
+      renderInventory();
+      renderStockEntryHistory();
+      return mappedProduct;
+    }
+
     async function loadStockMovementsFromDatabase() {
       try {
         const response = await fetch(`${API_URL}/stock-movements`);
@@ -1956,13 +2016,7 @@
         }
         const products = await response.json();
         if (!Array.isArray(products)) throw new Error('Invalid response format – expected an array');
-        productMasters = products.map(item => ({
-          id: item.id,
-          partNumber: item.part_number,
-          description: item.description,
-          category: item.category || "-",
-          status: normalizeProductStatus(item.status)
-        }));
+        productMasters = products.map(mapProduct);
         renderProductMaster();
         await loadStockMovementsFromDatabase();
       } catch (error) {
@@ -2126,11 +2180,11 @@
           const entryPN = document.getElementById("entryPartNumber");
           if (normalizePartNumber(entryPN.value) === editingProductOriginalPartNumber) entryPN.value = product.part_number;
         }
+        upsertLocalProduct(data.product);
         showStatusMessage(masterMessage, isEditing ? "Product master updated." : "Product master saved.");
-        await loadProductsFromDatabase();
         updateLookup();
         clearProductEditMode();
-      } catch (error) { showStatusMessage(masterMessage, "Cannot connect to backend API.", "error"); }
+      } catch (error) { showStatusMessage(masterMessage, error.message || "Cannot connect to backend API.", "error"); }
     });
 
     productMasterForm.addEventListener("reset", function(event) { if (editingProductId !== null) { event.preventDefault(); clearProductEditMode(); hideMessage(masterMessage); } });
@@ -2181,6 +2235,7 @@
 
     stockEntryForm.addEventListener("reset", function() { clearLookup(); setTimeout(updateAdjustmentFields, 0); });
 
+    restoreSavedSession();
     loadProductsFromDatabase();
     updateAdjustmentFields();
   </script>
