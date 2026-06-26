@@ -1816,7 +1816,8 @@
         </tr>`;
         let detailRow = '';
         if (productMovements.length) {
-          detailRow = `<tr class="movement-detail" data-partnumber="${escapeHtml(product.partNumber)}" style="display:none;"><td colspan="8" style="padding:0;"><table style="width:100%; margin:8px 0; border-left:3px solid #1d6f9f;"><thead><tr><th>Movement ID</th><th>Operation</th><th>Stock Card No.</th><th>Qty</th><th>Location</th><th>Status</th><th>Shipment</th><th>POC</th><th>Remark</th></tr></thead><tbody>${productMovements.map(m => `<tr><td>${m.id}</td><td>${escapeHtml(m.operationType)}</td><td>${escapeHtml(m.stockCardNo || "-")}</td><td class="qty">${m.quantity}</td><td>${escapeHtml(m.location)}</td><td>${escapeHtml(m.stockStatusType)}</td><td>${escapeHtml(m.shipment || "-")}</td><td>${escapeHtml(m.pocKeyIn || "-")}</td><td>${escapeHtml(m.remark || "-")}</td></tr>`).join('')}</tbody></table></td></tr>`;
+          const detailDisplay = searchValue ? "table-row" : "none";
+          detailRow = `<tr class="movement-detail" data-partnumber="${escapeHtml(product.partNumber)}" style="display:${detailDisplay};"><td colspan="8" style="padding:0;"><table style="width:100%; margin:8px 0; border-left:3px solid #1d6f9f;"><thead><tr><th>Movement ID</th><th>Operation</th><th>Stock Card No.</th><th>Qty</th><th>Location</th><th>Status</th><th>Shipment</th><th>POC</th><th>Remark</th></tr></thead><tbody>${productMovements.map(m => `<tr><td>${m.id}</td><td>${escapeHtml(m.operationType)}</td><td>${escapeHtml(m.stockCardNo || "-")}</td><td class="qty">${m.quantity}</td><td>${escapeHtml(m.location)}</td><td>${escapeHtml(m.stockStatusType)}</td><td>${escapeHtml(m.shipment || "-")}</td><td>${escapeHtml(m.pocKeyIn || "-")}</td><td>${escapeHtml(m.remark || "-")}</td></tr>`).join('')}</tbody></table></td></tr>`;
         }
         return [productRow, detailRow];
       });
