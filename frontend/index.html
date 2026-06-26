@@ -1401,7 +1401,10 @@
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || "Login failed");
 
-        if (showAuthenticatedApp(data)) persistSession(currentUser);
+        if (showAuthenticatedApp(data)) {
+          persistSession(currentUser);
+          loadProductsFromDatabase();
+        }
       } catch (error) {
         showMessage(loginMessage, error.message, true);
       }
@@ -1692,20 +1695,46 @@
       } catch (error) { showStatusMessage(masterMessage, "Cannot connect to backend API.", "error"); }
     }
 
+    function normalizeMovementText(value) {
+      return String(value || "").trim().toLowerCase();
+    }
+
     function calculateCurrentQuantity(partNumber) {
       return movements.filter(m => m.partNumber === partNumber).reduce((total, m) => {
-        if (m.operationType === "Add Stock") return total + m.quantity;
-        if (m.operationType === "Remove Stock") return total - m.quantity;
+        const operationType = normalizeMovementText(m.operationType);
+        if (operationType === "add stock") return total + m.quantity;
+        if (operationType === "remove stock") return total - m.quantity;
         return total + m.quantity;
       }, 0);
     }
 
+    function calculateAvailableQuantityFromMovements(productMovements) {
+      return Math.max(0, productMovements.reduce((total, m) => {
+        const operationType = normalizeMovementText(m.operationType);
+        const stockStatusType = normalizeMovementText(m.stockStatusType);
+        if (operationType === "add stock" && stockStatusType === "available") return total + m.quantity;
+        if (operationType === "remove stock") return total - m.quantity;
+        return total;
+      }, 0));
+    }
+
     function hasStockMovement(partNumber) { return movements.some(m => m.partNumber === partNumber); }
 
-    function shouldShowInventoryProduct(product, quantity) {
+    function shouldShowInventoryProduct(product, quantity, availableQty) {
+      if (currentUser?.role === "sales") return availableQty > 0;
       if (!hasStockMovement(product.partNumber)) return false;
       if (quantity > 0) return true;
       return currentUser?.role === "admin" && showZeroQuantityToggle.checked && quantity === 0;
+    }
+
+    function getInventoryStockStatus(product, productMovements, quantity, availableQty) {
+      const statuses = [...new Set(productMovements.map(m => m.stockStatusType).filter(Boolean))];
+      if (availableQty > 0 && availableQty < quantity) return "Mixed";
+      if (statuses.length > 1) return "Mixed";
+      if (product.stockStatusType) return product.stockStatusType;
+      if (statuses.length === 1) return statuses[0];
+      if (availableQty > 0) return "Available";
+      return "-";
     }
 
     function updateDashboard() {
@@ -1790,18 +1819,44 @@
 
     function loadInventoryView() {
       const searchValue = stockCardSearch.value.trim().toLowerCase();
+      const isSalesUser = currentUser?.role === "sales";
       const rows = productMasters.flatMap(product => {
         const productMovements = movements.filter(m => m.partNumber === product.partNumber);
-        const quantity = calculateCurrentQuantity(product.partNumber);
-        if (!shouldShowInventoryProduct(product, quantity)) return [];
+        const availableMovements = productMovements.filter(m => normalizeMovementText(m.stockStatusType) === "available");
+        const fallbackQuantity = calculateCurrentQuantity(product.partNumber);
+        const fallbackAvailableQty = calculateAvailableQuantityFromMovements(productMovements);
+        const quantity = product.currentQuantity ?? fallbackQuantity;
+        const availableQty = product.availableQuantity ?? fallbackAvailableQty;
+        const quantityLabel = isSalesUser ? `Sales Qty: ${availableQty}` : quantity;
+        if (!shouldShowInventoryProduct(product, quantity, availableQty)) return [];
         if (selectedInventoryCategory !== "all" && product.category !== selectedInventoryCategory) return [];
         const latest = productMovements[productMovements.length - 1];
-        const stockStatusType = latest?.stockStatusType || "-";
-        const stockCardNo = latest?.stockCardNo || "-";
-        const pocKeyIn = latest?.pocKeyIn || "-";
-        const remark = latest?.remark || "No remark";
+        const displayMovement = isSalesUser ? (availableMovements[availableMovements.length - 1] || latest) : latest;
+        const stockStatusType = isSalesUser ? "Available" : getInventoryStockStatus(product, productMovements, quantity, availableQty);
+        if (isSalesUser && availableMovements.length) {
+          return availableMovements.flatMap(m => {
+            const salesQuantityLabel = `Sales Qty: ${m.quantity}`;
+            if (searchValue) {
+              const searchable = [m.stockCardNo, product.partNumber, product.description, product.category, salesQuantityLabel, "Available", m.pocKeyIn, m.remark];
+              if (!searchable.some(v => String(v).toLowerCase().includes(searchValue))) return [];
+            }
+            return `<tr class="product-row" data-partnumber="${escapeHtml(product.partNumber)}">
+              <td>${escapeHtml(product.partNumber)}</td>
+              <td>${escapeHtml(m.stockCardNo || "-")}</td>
+              <td>${escapeHtml(product.description)}</td>
+              <td>${escapeHtml(product.category)}</td>
+              <td class="qty">${escapeHtml(salesQuantityLabel)}</td>
+              <td>Available</td>
+              <td>${escapeHtml(m.pocKeyIn || "-")}</td>
+              <td>${escapeHtml(m.remark || "-")}</td>
+            </tr>`;
+          });
+        }
+        const stockCardNo = displayMovement?.stockCardNo || "-";
+        const pocKeyIn = displayMovement?.pocKeyIn || "-";
+        const remark = displayMovement?.remark || "No remark";
         if (searchValue) {
-          const searchable = [stockCardNo, product.partNumber, product.description, product.category, quantity, stockStatusType, pocKeyIn, remark];
+          const searchable = [stockCardNo, product.partNumber, product.description, product.category, quantityLabel, stockStatusType, pocKeyIn, remark];
           if (!searchable.some(v => String(v).toLowerCase().includes(searchValue))) return [];
         }
         const productRow = `<tr class="product-row" data-partnumber="${escapeHtml(product.partNumber)}">
@@ -1809,13 +1864,13 @@
           <td>${escapeHtml(stockCardNo)}</td>
           <td>${escapeHtml(product.description)}</td>
           <td>${escapeHtml(product.category)}</td>
-          <td class="qty">${quantity}</td>
+          <td class="qty">${escapeHtml(quantityLabel)}</td>
           <td>${escapeHtml(stockStatusType)}</td>
           <td>${escapeHtml(pocKeyIn)}</td>
           <td>${escapeHtml(remark)}</td>
         </tr>`;
         let detailRow = '';
-        if (productMovements.length) {
+        if (!isSalesUser && productMovements.length) {
           const detailDisplay = searchValue ? "table-row" : "none";
           detailRow = `<tr class="movement-detail" data-partnumber="${escapeHtml(product.partNumber)}" style="display:${detailDisplay};"><td colspan="8" style="padding:0;"><table style="width:100%; margin:8px 0; border-left:3px solid #1d6f9f;"><thead><tr><th>Movement ID</th><th>Operation</th><th>Stock Card No.</th><th>Qty</th><th>Location</th><th>Status</th><th>Shipment</th><th>POC</th><th>Remark</th></tr></thead><tbody>${productMovements.map(m => `<tr><td>${m.id}</td><td>${escapeHtml(m.operationType)}</td><td>${escapeHtml(m.stockCardNo || "-")}</td><td class="qty">${m.quantity}</td><td>${escapeHtml(m.location)}</td><td>${escapeHtml(m.stockStatusType)}</td><td>${escapeHtml(m.shipment || "-")}</td><td>${escapeHtml(m.pocKeyIn || "-")}</td><td>${escapeHtml(m.remark || "-")}</td></tr>`).join('')}</tbody></table></td></tr>`;
         }
@@ -1976,6 +2031,9 @@
         partNumber: item.part_number,
         description: item.description,
         category: item.category || "-",
+        currentQuantity: item.current_quantity ?? null,
+        availableQuantity: item.available_quantity ?? null,
+        stockStatusType: item.stock_status_type || null,
         status: normalizeProductStatus(item.status)
       };
     }
@@ -1996,7 +2054,7 @@
         const response = await fetch(`${API_URL}/stock-movements`);
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const stockMovements = await response.json();
-        if (!Array.isArray(stockMovements)) throw new Error('Invalid response format – expected an array');
+        if (!Array.isArray(stockMovements)) throw new Error('Invalid response format 鈥?expected an array');
         movements.splice(0, movements.length, ...stockMovements.map(mapStockMovement));
         renderInventory();
         renderStockEntryHistory();
@@ -2008,15 +2066,22 @@
       }
     }
 
+    async function fetchProducts(roleQuery = "") {
+      const response = await fetch(`${API_URL}/products${roleQuery}`);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP ${response.status}`);
+      }
+      const products = await response.json();
+      if (!Array.isArray(products)) throw new Error("Invalid response format - expected an array");
+      return products;
+    }
+
     async function loadProductsFromDatabase() {
       try {
-        const response = await fetch(`${API_URL}/products`);
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error || `HTTP ${response.status}`);
-        }
-        const products = await response.json();
-        if (!Array.isArray(products)) throw new Error('Invalid response format – expected an array');
+        const roleQuery = currentUser?.role ? `?userRole=${encodeURIComponent(currentUser.role)}` : "";
+        let products = await fetchProducts(roleQuery);
+        if (currentUser?.role === "sales" && products.length === 0) products = await fetchProducts();
         productMasters = products.map(mapProduct);
         renderProductMaster();
         await loadStockMovementsFromDatabase();
@@ -2242,3 +2307,4 @@
   </script>
 </body>
 </html>
+
