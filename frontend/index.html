@@ -856,8 +856,8 @@
               </div>
               <div class="field">
                 <label for="masterCategory">Category</label>
-                <select id="masterCategory" required>
-                  <option value="">Select category</option>
+                <input id="masterCategory" type="text" list="masterCategorySuggestions" placeholder="Enter or select a category" required>
+                <datalist id="masterCategorySuggestions">
                   <option value="Keyboard">Keyboard</option>
                   <option value="Mouse">Mouse</option>
                   <option value="USB Hub and Card Reader">USB Hub and Card Reader</option>
@@ -877,7 +877,7 @@
                   <option value="Mobile Equipment">Mobile Equipment</option>
                   <option value="Dcom Casing">Dcom Casing</option>
                   <option value="Server Rack Fan Tray">Server Rack Fan Tray</option>
-                </select>
+                </datalist>
               </div>
               <div class="field">
                 <label for="masterStatus">Status</label>
@@ -1252,6 +1252,8 @@
     const createUserMessage = document.getElementById("createUserMessage");
     const userListRows = document.getElementById("userListRows");
     const productMasterForm = document.getElementById("productMasterForm");
+    const masterCategorySuggestions = document.getElementById("masterCategorySuggestions");
+    const defaultProductCategorySuggestions = [...masterCategorySuggestions.options].map(option => option.value);
     const stockEntryForm = document.getElementById("stockEntryForm");
     const masterMessage = document.getElementById("masterMessage");
     const lookupMessage = document.getElementById("lookupMessage");
@@ -1698,8 +1700,28 @@
       return productMasters.find(p => normalizePartNumber(p.partNumber) === normalized);
     }
 
+    function getUniqueCategories(values) {
+      const categories = new Map();
+      values.forEach(value => {
+        const category = String(value || "").trim();
+        const key = category.toLowerCase();
+        if (category && category !== "-" && !categories.has(key)) categories.set(key, category);
+      });
+      return [...categories.values()].sort((a, b) => a.localeCompare(b));
+    }
+
     function getProductMasterCategories() {
-      return [...document.getElementById("masterCategory").options].map(opt => opt.value).filter(Boolean);
+      return getUniqueCategories(productMasters.map(product => product.category));
+    }
+
+    function renderProductCategorySuggestions() {
+      const categories = getUniqueCategories([
+        ...defaultProductCategorySuggestions,
+        ...getProductMasterCategories()
+      ]);
+      masterCategorySuggestions.innerHTML = categories
+        .map(category => `<option value="${escapeHtml(category)}"></option>`)
+        .join("");
     }
 
     function renderInventoryCategoryFilter() {
@@ -1775,6 +1797,7 @@
     }
 
     function renderProductMaster() {
+      renderProductCategorySuggestions();
       const searchTerm = productMasterSearch.value.trim().toLowerCase();
       const filtered = searchTerm ? productMasters.filter(p => [p.partNumber, p.description, p.category].some(val => String(val).toLowerCase().includes(searchTerm))) : productMasters;
       const rows = filtered.map(p => `
@@ -2234,9 +2257,14 @@
       const product = {
         part_number: normalizePartNumber(document.getElementById("masterPartNumber").value),
         description: document.getElementById("masterDescription").value.trim(),
-        category: document.getElementById("masterCategory").value,
+        category: document.getElementById("masterCategory").value.trim(),
         status: document.getElementById("masterStatus").value
       };
+      if (!product.category) {
+        showStatusMessage(masterMessage, "Please enter a category.", "error");
+        document.getElementById("masterCategory").focus();
+        return;
+      }
       try {
         const isEditing = editingProductId !== null;
         const url = isEditing ? `${API_URL}/products/${editingProductId}` : `${API_URL}/products`;
