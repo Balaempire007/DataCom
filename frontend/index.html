@@ -1095,14 +1095,14 @@
     <section class="page" id="inventory-view">
       <div class="page-title">
         <h2>Inventory View</h2>
-        <p>Sales view only. Current quantity is calculated from stock movements.</p>
+        <p>Read-only stock balance for warehouse and sales users, calculated from stock movements.</p>
       </div>
 
       <div class="panel">
         <div class="panel-header">
           <div>
-            <h3>Inventory List / Sales View</h3>
-            <p>Displays product information and available quantity without warehouse entry controls.</p>
+            <h3>Inventory List</h3>
+            <p>Displays product information and current quantity without stock entry controls.</p>
           </div>
           <label class="toggle-control hidden" id="showZeroQuantityControl">
             <input id="showZeroQuantityToggle" type="checkbox">
@@ -1306,7 +1306,7 @@
     }
 
     function normalizePartNumber(value) {
-      return value.trim().toUpperCase();
+      return String(value || "").trim().toUpperCase();
     }
 
     function normalizeProductStatus(value) {
@@ -1322,13 +1322,37 @@
       return productMasters.find((product) => product.partNumber === normalized);
     }
 
+    const ROLE_PAGE_ACCESS = {
+      warehouse: ["stock-entry", "inventory-view"],
+      sales: ["inventory-view"]
+    };
+
+    function getAllowedPagesForRole(role, requestedPages = []) {
+      const normalizedRole = String(role || "").trim().toLowerCase();
+      if (ROLE_PAGE_ACCESS[normalizedRole]) return [...ROLE_PAGE_ACCESS[normalizedRole]];
+      return Array.isArray(requestedPages) ? [...new Set(requestedPages)] : [];
+    }
+
+    function syncRolePageCheckboxes(role, checkboxes, requestedPages = []) {
+      const normalizedRole = String(role || "").trim().toLowerCase();
+      const fixedPages = ROLE_PAGE_ACCESS[normalizedRole];
+      checkboxes.forEach(checkbox => {
+        checkbox.disabled = Boolean(fixedPages);
+        checkbox.checked = fixedPages
+          ? fixedPages.includes(checkbox.value)
+          : requestedPages.includes(checkbox.value);
+      });
+    }
+
     function normalizeSessionUser(user) {
-      const allowedPages = user?.allowedPages || user?.allowed_pages || [];
-      if (!user?.username || !user?.role || !Array.isArray(allowedPages) || allowedPages.length === 0) return null;
+      const role = String(user?.role || "").trim().toLowerCase();
+      const requestedPages = user?.allowedPages || user?.allowed_pages || [];
+      const allowedPages = getAllowedPagesForRole(role, requestedPages);
+      if (!user?.username || !role || allowedPages.length === 0) return null;
       return {
         id: user.id,
         username: user.username,
-        role: user.role,
+        role,
         allowedPages
       };
     }
@@ -1375,9 +1399,9 @@
         const page = btn.dataset.page;
         btn.classList.toggle("hidden", !currentUser.allowedPages.includes(page));
       });
-      const isAdmin = currentUser.role === "admin";
-      document.getElementById("showZeroQuantityControl")?.classList.toggle("hidden", !isAdmin);
-      if (!isAdmin) document.getElementById("showZeroQuantityToggle").checked = false;
+      const canViewInventory = currentUser.allowedPages.includes("inventory-view");
+      document.getElementById("showZeroQuantityControl")?.classList.toggle("hidden", !canViewInventory);
+      if (!canViewInventory) document.getElementById("showZeroQuantityToggle").checked = false;
       document.querySelector(".nav").classList.add("is-visible");
       userArea.classList.add("is-visible");
       userChip.textContent = `${currentUser.username} / ${currentUser.role}`;
@@ -1523,19 +1547,29 @@
       editUsernameDisplay.value = user.username;
       editRoleSelect.value = user.role;
       const pages = user.allowed_pages || [];
-      document.querySelectorAll(".editAllowedPages").forEach(cb => {
-        cb.checked = pages.includes(cb.value);
-      });
+      syncRolePageCheckboxes(user.role, editAllowedPageCheckboxes, pages);
       hideMessage(editUserMessage);
       editUserModal.classList.remove("hidden");
     }
+
+    editRoleSelect.addEventListener("change", function() {
+      const selectedPages = Array.from(editAllowedPageCheckboxes).filter(cb => cb.checked).map(cb => cb.value);
+      syncRolePageCheckboxes(editRoleSelect.value, editAllowedPageCheckboxes, selectedPages);
+    });
+
+    document.getElementById("newRole").addEventListener("change", function() {
+      const checkboxes = document.querySelectorAll(".newAllowedPages");
+      const selectedPages = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value);
+      syncRolePageCheckboxes(this.value, checkboxes, selectedPages);
+    });
 
     cancelEditUserBtn.addEventListener("click", () => { editUserModal.classList.add("hidden"); hideMessage(editUserMessage); });
     editUserForm.addEventListener("submit", async function(event) {
       event.preventDefault();
       const userId = editUserIdInput.value;
       const role = editRoleSelect.value;
-      const allowedPages = Array.from(document.querySelectorAll(".editAllowedPages:checked")).map(cb => cb.value);
+      const selectedPages = Array.from(document.querySelectorAll(".editAllowedPages:checked")).map(cb => cb.value);
+      const allowedPages = getAllowedPagesForRole(role, selectedPages);
       try {
         const response = await fetch(`${API_URL}/users/${userId}`, {
           method: "PUT",
@@ -1572,7 +1606,8 @@
       const username = document.getElementById("newUsername").value.trim();
       const password = document.getElementById("newPassword").value;
       const role = document.getElementById("newRole").value;
-      const allowedPages = Array.from(document.querySelectorAll(".newAllowedPages:checked")).map(cb => cb.value);
+      const selectedPages = Array.from(document.querySelectorAll(".newAllowedPages:checked")).map(cb => cb.value);
+      const allowedPages = getAllowedPagesForRole(role, selectedPages);
       try {
         const response = await fetch(`${API_URL}/users`, {
           method: "POST",
@@ -1583,6 +1618,7 @@
         if (!response.ok) throw new Error(data.error || "Creation failed");
         showMessage(createUserMessage, "User created successfully.");
         createUserForm.reset();
+        syncRolePageCheckboxes("admin", document.querySelectorAll(".newAllowedPages"), ["inventory-view"]);
         loadUserList();
       } catch (error) {
         showMessage(createUserMessage, error.message, true);
@@ -1658,7 +1694,8 @@
     }
 
     function getProductByPartNumber(partNumber) {
-      return productMasters.find(p => p.partNumber === partNumber);
+      const normalized = normalizePartNumber(partNumber);
+      return productMasters.find(p => normalizePartNumber(p.partNumber) === normalized);
     }
 
     function getProductMasterCategories() {
@@ -1700,7 +1737,8 @@
     }
 
     function calculateCurrentQuantity(partNumber) {
-      return movements.filter(m => m.partNumber === partNumber).reduce((total, m) => {
+      const normalizedPartNumber = normalizePartNumber(partNumber);
+      return movements.filter(m => normalizePartNumber(m.partNumber) === normalizedPartNumber).reduce((total, m) => {
         const operationType = normalizeMovementText(m.operationType);
         if (operationType === "add stock") return total + m.quantity;
         if (operationType === "remove stock") return total - m.quantity;
@@ -1708,32 +1746,22 @@
       }, 0);
     }
 
-    function calculateAvailableQuantityFromMovements(productMovements) {
-      return Math.max(0, productMovements.reduce((total, m) => {
-        const operationType = normalizeMovementText(m.operationType);
-        const stockStatusType = normalizeMovementText(m.stockStatusType);
-        if (operationType === "add stock" && stockStatusType === "available") return total + m.quantity;
-        if (operationType === "remove stock") return total - m.quantity;
-        return total;
-      }, 0));
+    function hasStockMovement(partNumber) {
+      const normalizedPartNumber = normalizePartNumber(partNumber);
+      return movements.some(m => normalizePartNumber(m.partNumber) === normalizedPartNumber);
     }
 
-    function hasStockMovement(partNumber) { return movements.some(m => m.partNumber === partNumber); }
-
-    function shouldShowInventoryProduct(product, quantity, availableQty) {
-      if (currentUser?.role === "sales") return availableQty > 0;
+    function shouldShowInventoryProduct(product, quantity) {
       if (!hasStockMovement(product.partNumber)) return false;
       if (quantity > 0) return true;
-      return currentUser?.role === "admin" && showZeroQuantityToggle.checked && quantity === 0;
+      return showZeroQuantityToggle.checked && quantity === 0;
     }
 
-    function getInventoryStockStatus(product, productMovements, quantity, availableQty) {
+    function getInventoryStockStatus(product, productMovements) {
       const statuses = [...new Set(productMovements.map(m => m.stockStatusType).filter(Boolean))];
-      if (availableQty > 0 && availableQty < quantity) return "Mixed";
       if (statuses.length > 1) return "Mixed";
-      if (product.stockStatusType) return product.stockStatusType;
       if (statuses.length === 1) return statuses[0];
-      if (availableQty > 0) return "Available";
+      if (product.stockStatusType) return product.stockStatusType;
       return "-";
     }
 
@@ -1821,42 +1849,21 @@
       const searchValue = stockCardSearch.value.trim().toLowerCase();
       const isSalesUser = currentUser?.role === "sales";
       const rows = productMasters.flatMap(product => {
-        const productMovements = movements.filter(m => m.partNumber === product.partNumber);
-        const availableMovements = productMovements.filter(m => normalizeMovementText(m.stockStatusType) === "available");
-        const fallbackQuantity = calculateCurrentQuantity(product.partNumber);
-        const fallbackAvailableQty = calculateAvailableQuantityFromMovements(productMovements);
-        const quantity = product.currentQuantity ?? fallbackQuantity;
-        const availableQty = product.availableQuantity ?? fallbackAvailableQty;
-        const quantityLabel = isSalesUser ? `Sales Qty: ${availableQty}` : quantity;
-        if (!shouldShowInventoryProduct(product, quantity, availableQty)) return [];
+        const normalizedPartNumber = normalizePartNumber(product.partNumber);
+        const productMovements = movements.filter(m => normalizePartNumber(m.partNumber) === normalizedPartNumber);
+        const visibleDetailMovements = isSalesUser
+          ? productMovements.filter(m => normalizeMovementText(m.stockStatusType) !== "sold")
+          : productMovements;
+        const quantity = calculateCurrentQuantity(product.partNumber);
+        if (!shouldShowInventoryProduct(product, quantity)) return [];
         if (selectedInventoryCategory !== "all" && product.category !== selectedInventoryCategory) return [];
         const latest = productMovements[productMovements.length - 1];
-        const displayMovement = isSalesUser ? (availableMovements[availableMovements.length - 1] || latest) : latest;
-        const stockStatusType = isSalesUser ? "Available" : getInventoryStockStatus(product, productMovements, quantity, availableQty);
-        if (isSalesUser && availableMovements.length) {
-          return availableMovements.flatMap(m => {
-            const salesQuantityLabel = `Sales Qty: ${m.quantity}`;
-            if (searchValue) {
-              const searchable = [m.stockCardNo, product.partNumber, product.description, product.category, salesQuantityLabel, "Available", m.pocKeyIn, m.remark];
-              if (!searchable.some(v => String(v).toLowerCase().includes(searchValue))) return [];
-            }
-            return `<tr class="product-row" data-partnumber="${escapeHtml(product.partNumber)}">
-              <td>${escapeHtml(product.partNumber)}</td>
-              <td>${escapeHtml(m.stockCardNo || "-")}</td>
-              <td>${escapeHtml(product.description)}</td>
-              <td>${escapeHtml(product.category)}</td>
-              <td class="qty">${escapeHtml(salesQuantityLabel)}</td>
-              <td>Available</td>
-              <td>${escapeHtml(m.pocKeyIn || "-")}</td>
-              <td>${escapeHtml(m.remark || "-")}</td>
-            </tr>`;
-          });
-        }
-        const stockCardNo = displayMovement?.stockCardNo || "-";
-        const pocKeyIn = displayMovement?.pocKeyIn || "-";
-        const remark = displayMovement?.remark || "No remark";
+        const stockStatusType = getInventoryStockStatus(product, productMovements);
+        const stockCardNo = latest?.stockCardNo || "-";
+        const pocKeyIn = latest?.pocKeyIn || "-";
+        const remark = latest?.remark || "No remark";
         if (searchValue) {
-          const searchable = [stockCardNo, product.partNumber, product.description, product.category, quantityLabel, stockStatusType, pocKeyIn, remark];
+          const searchable = [stockCardNo, product.partNumber, product.description, product.category, quantity, stockStatusType, pocKeyIn, remark];
           if (!searchable.some(v => String(v).toLowerCase().includes(searchValue))) return [];
         }
         const productRow = `<tr class="product-row" data-partnumber="${escapeHtml(product.partNumber)}">
@@ -1864,15 +1871,15 @@
           <td>${escapeHtml(stockCardNo)}</td>
           <td>${escapeHtml(product.description)}</td>
           <td>${escapeHtml(product.category)}</td>
-          <td class="qty">${escapeHtml(quantityLabel)}</td>
+          <td class="qty">${quantity}</td>
           <td>${escapeHtml(stockStatusType)}</td>
           <td>${escapeHtml(pocKeyIn)}</td>
           <td>${escapeHtml(remark)}</td>
         </tr>`;
         let detailRow = '';
-        if (!isSalesUser && productMovements.length) {
+        if (visibleDetailMovements.length) {
           const detailDisplay = searchValue ? "table-row" : "none";
-          detailRow = `<tr class="movement-detail" data-partnumber="${escapeHtml(product.partNumber)}" style="display:${detailDisplay};"><td colspan="8" style="padding:0;"><table style="width:100%; margin:8px 0; border-left:3px solid #1d6f9f;"><thead><tr><th>Movement ID</th><th>Operation</th><th>Stock Card No.</th><th>Qty</th><th>Location</th><th>Status</th><th>Shipment</th><th>POC</th><th>Remark</th></tr></thead><tbody>${productMovements.map(m => `<tr><td>${m.id}</td><td>${escapeHtml(m.operationType)}</td><td>${escapeHtml(m.stockCardNo || "-")}</td><td class="qty">${m.quantity}</td><td>${escapeHtml(m.location)}</td><td>${escapeHtml(m.stockStatusType)}</td><td>${escapeHtml(m.shipment || "-")}</td><td>${escapeHtml(m.pocKeyIn || "-")}</td><td>${escapeHtml(m.remark || "-")}</td></tr>`).join('')}</tbody></table></td></tr>`;
+          detailRow = `<tr class="movement-detail" data-partnumber="${escapeHtml(product.partNumber)}" style="display:${detailDisplay};"><td colspan="8" style="padding:0;"><table style="width:100%; margin:8px 0; border-left:3px solid #1d6f9f;"><thead><tr><th>Movement ID</th><th>Operation</th><th>Stock Card No.</th><th>Qty</th><th>Location</th><th>Status</th><th>Shipment</th><th>POC</th><th>Remark</th></tr></thead><tbody>${visibleDetailMovements.map(m => `<tr><td>${m.id}</td><td>${escapeHtml(m.operationType)}</td><td>${escapeHtml(m.stockCardNo || "-")}</td><td class="qty">${m.quantity}</td><td>${escapeHtml(m.location)}</td><td>${escapeHtml(m.stockStatusType)}</td><td>${escapeHtml(m.shipment || "-")}</td><td>${escapeHtml(m.pocKeyIn || "-")}</td><td>${escapeHtml(m.remark || "-")}</td></tr>`).join('')}</tbody></table></td></tr>`;
         }
         return [productRow, detailRow];
       });
@@ -2014,7 +2021,7 @@
         operationType: item.operation_type,
         stockCardNo: item.stock_card_no,
         adjustmentReason: item.adjustment_reason,
-        partNumber: item.part_number,
+        partNumber: normalizePartNumber(item.part_number),
         quantity: Number(item.quantity) || 0,
         location: item.location,
         stockStatusType: item.stock_status_type,
@@ -2028,11 +2035,9 @@
     function mapProduct(item) {
       return {
         id: item.id,
-        partNumber: item.part_number,
+        partNumber: normalizePartNumber(item.part_number),
         description: item.description,
         category: item.category || "-",
-        currentQuantity: item.current_quantity ?? null,
-        availableQuantity: item.available_quantity ?? null,
         stockStatusType: item.stock_status_type || null,
         status: normalizeProductStatus(item.status)
       };
@@ -2054,7 +2059,7 @@
         const response = await fetch(`${API_URL}/stock-movements`);
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const stockMovements = await response.json();
-        if (!Array.isArray(stockMovements)) throw new Error('Invalid response format 鈥?expected an array');
+        if (!Array.isArray(stockMovements)) throw new Error("Invalid response format - expected an array");
         movements.splice(0, movements.length, ...stockMovements.map(mapStockMovement));
         renderInventory();
         renderStockEntryHistory();
@@ -2079,9 +2084,7 @@
 
     async function loadProductsFromDatabase() {
       try {
-        const roleQuery = currentUser?.role ? `?userRole=${encodeURIComponent(currentUser.role)}` : "";
-        let products = await fetchProducts(roleQuery);
-        if (currentUser?.role === "sales" && products.length === 0) products = await fetchProducts();
+        const products = await fetchProducts();
         productMasters = products.map(mapProduct);
         renderProductMaster();
         await loadStockMovementsFromDatabase();
@@ -2307,4 +2310,3 @@
   </script>
 </body>
 </html>
-
