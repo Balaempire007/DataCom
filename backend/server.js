@@ -7,7 +7,40 @@ const app = express()
 const PORT = process.env.PORT || 5000
 const apiRouter = express.Router()
 
-app.use(cors())
+const configuredOrigins = (process.env.FRONTEND_ORIGINS || '')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean)
+
+const allowedOrigins = new Set([
+  'https://warehouse-inventory.vercel.app',
+  'https://warehouse-inventory-api.vercel.app',
+  'https://desktop-19n0dfj.taildafd1a.ts.net:8443',
+  'http://localhost:3000',
+  'http://localhost:5173',
+  'http://127.0.0.1:3000',
+  'http://127.0.0.1:5173',
+  ...configuredOrigins
+])
+
+const allowedOriginPatterns = [
+  /^https:\/\/warehouse-inventory-[a-z0-9-]+\.vercel\.app$/i
+]
+
+const corsOptions = {
+  origin(origin, callback) {
+    if (!origin || allowedOrigins.has(origin) || allowedOriginPatterns.some((pattern) => pattern.test(origin))) {
+      return callback(null, true)
+    }
+    return callback(new Error(`CORS origin not allowed: ${origin}`))
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  optionsSuccessStatus: 204
+}
+
+app.use(cors(corsOptions))
+app.options('*', cors(corsOptions))
 app.use(express.json())
 
 console.log('DATABASE_URL:', process.env.DATABASE_URL)
